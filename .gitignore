@@ -3,8 +3,7 @@ Docker/mariadb/.env
 Docker/mariadb/sql
 Docker/mariadb/data
 src/app/__pycache__
-src/project/__pycache__
-src/project/migrations
 node_modules
 mariadb
 static
+src/service/__pycache__
