@@ -10,7 +10,7 @@ def index(request):
 
 class GetAPIView(APIView):
     def get(self, request):
-        return Response({'message': 'Hello, React'})
+        return Response({'message': 'Hello, React!'})
     
 
 class PostAPIView(APIView):

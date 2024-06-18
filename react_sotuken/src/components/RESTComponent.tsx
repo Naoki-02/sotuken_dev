@@ -6,8 +6,8 @@ const App = () => {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    axios.get('http://10.0.2.2:8000/api/get/')
-    // axios.get('https://ce4b-202-250-70-11.ngrok-free.app/api/hello/')
+    // axios.get('http://10.0.2.2:8000/api/get/')
+    axios.get('https://3c4d-202-250-70-9.ngrok-free.app/api/get/')
       .then(response => {
         setMessage(response.data.message);
       })
@@ -31,6 +31,7 @@ const Styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 40,
+    color: 'black',
   },
 });
 
