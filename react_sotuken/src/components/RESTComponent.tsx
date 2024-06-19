@@ -7,7 +7,7 @@ const App = () => {
 
   useEffect(() => {
     // axios.get('http://10.0.2.2:8000/api/get/')
-    axios.get('https://3c4d-202-250-70-9.ngrok-free.app/api/get/')
+    axios.get('https://464e-202-250-70-9.ngrok-free.app/api/get/')
       .then(response => {
         setMessage(response.data.message);
       })

@@ -1,12 +1,7 @@
 import { StackNavigationProp } from '@react-navigation/stack';
 import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-
-type RootStackParamList = {
-    Home: undefined;
-    PostMessage: undefined;
-    GetMessage: undefined;
-};
+import { RootStackParamList } from '../types';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 // type HomeScreenRouteProp = RouteProp<RootStackParamList, 'Home'>;
@@ -21,14 +16,18 @@ export default function HomeScreen({ navigation }: Props) {
         <View style={styles.container}>
             <Text style={styles.title}>Home Screen</Text>
             <View style={styles.buttonContainer}>
-            <Button
-                title="Post Message"
-                onPress={() => navigation.navigate('PostMessage')}
-            />
-            <Button
-                title="Get Message"
-                onPress={() => navigation.navigate('GetMessage')}
-            />
+                <Button
+                    title="Post Message"
+                    onPress={() => navigation.navigate('PostMessage')}
+                />
+                <Button
+                    title="Get Message"
+                    onPress={() => navigation.navigate('GetMessage')}
+                />
+                <Button
+                    title="Camera"
+                    onPress={() => navigation.navigate('Camera')}
+                />
             </View>
         </View>
     );
@@ -48,6 +47,6 @@ const styles = StyleSheet.create({
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        width: '60%', // ボタン幅を調整
+        width: '80%', // ボタン幅を調整
     },
 });
