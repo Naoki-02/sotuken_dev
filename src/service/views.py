@@ -1,22 +1,25 @@
+from django.conf import settings
+from django.http import JsonResponse
 from django.shortcuts import render
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from django.views import View
+from openai import OpenAI
 
 
-# Create your views here.
-def index(request):
-    return render(request, 'index.html')
+class ChatGPTView(View):
+    def post(self, request, *args, **kwargs):
+        client=OpenAI(api_key=settings.OEPNAI_API_KEY)
+        user_message = request.POST.get('message')
 
-class GetAPIView(APIView):
-    def get(self, request):
-        return Response({'message': 'Hello, React!'})
-    
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": user_message},
+            ],
+        )
 
-class PostAPIView(APIView):
-    def post(self, request,*args, **kwargs):
-        message= request.data.get('message')
-        if message:
-            return Response({'message': message},status=status.HTTP_200_OK)
-        return Response({"error":"No message found"},status=status.HTTP_400_BAD_REQUEST)
-        
+        gpt_response = response.choices[0].message['content']
+        return JsonResponse({'response': gpt_response})
+
+    def get(self, request, *args, **kwargs):
+        return render(request, 'index.html')

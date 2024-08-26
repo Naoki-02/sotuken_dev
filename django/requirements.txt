@@ -3,3 +3,4 @@ uwsgi
 mysqlclient
 djangorestframework
 django-cors-headers
+openai
