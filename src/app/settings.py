@@ -140,8 +140,9 @@ STATIC_ROOT = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ORIGINS = [
-    "http://localhost:3000",
-    "http://172.18.48.1:8000",
-    "http://10.0.2.2:8000",
-]
+OEPNAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+# CORS_ALLOW_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://172.18.48.1:8000",
+#     "http://10.0.2.2:8000",
+# ]

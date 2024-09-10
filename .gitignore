@@ -7,3 +7,5 @@ node_modules
 mariadb
 static
 src/service/__pycache__
+.env
+tmp.json

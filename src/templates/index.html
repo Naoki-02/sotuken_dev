@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with GPT-3.5-turbo</title>
+    {% csrf_token %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+<body>
+    <h1>Chat with GPT-3.5-turbo</h1>
+    <form id="chat-form">
+        <textarea id="message" rows="4" cols="50" placeholder="メッセージを入力してください"></textarea><br>
+        <button type="submit">送信</button>
+    </form>
+    <div id="response"></div>
+
+    <script>
+        // CSRFトークンを取得する関数
+        function getCSRFToken() {
+            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        }
+
+        document.getElementById('chat-form').onsubmit = function(e) {
+            e.preventDefault();
+            const message = document.getElementById('message').value;
+
+            fetch('/api/chat/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCSRFToken(),  // CSRFトークンをヘッダーに追加
+                },
+                body: 'message=' + encodeURIComponent(message)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('response').innerText = data.response;
+            })
+            .catch(error => {
+                console.error('エラー:', error);
+                document.getElementById('response').innerText = 'エラーが発生しました。';
+            });
+        };
+    </script>
+</body>
+</html>
