@@ -6,6 +6,8 @@ from django.shortcuts import render
 from django.views import View
 from openai import OpenAI
 
+from .models import Ingredients
+
 
 class ChatGPTView(View):
     def post(self, request, *args, **kwargs):
@@ -82,5 +84,22 @@ class ChatGPTView(View):
         except Exception as e:
             return JsonResponse({'error': 'ChatGPT APIへのリクエスト中にエラーが発生しました。'}, status=500)
 
+class IngredientsView(View):
+    def post(self, request, *args, **kwargs):
+        name = request.POST.get('name') #フロントからのリクエストを取得
+        quantity = request.POST.get('quantity') #フロントからのリクエストを取得
+        category =request.POST.get('category') #フロントからのリクエストを取得
+        
+
+        ingredients = Ingredients( #モデルに保存
+            name=name,
+            quantity=quantity,
+            category=category
+        )
+        ingredients.save() #保存
+
+        return JsonResponse({'message': 'Ingredients saved successfully!'}, status=201)
+
+
     def get(self, request, *args, **kwargs):
-        return render(request, 'index.html')
+        return render(request, 'index.html') #index.htmlを返す
