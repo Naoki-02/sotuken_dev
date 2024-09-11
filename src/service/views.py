@@ -84,6 +84,10 @@ class ChatGPTView(View):
         except Exception as e:
             return JsonResponse({'error': 'ChatGPT APIへのリクエスト中にエラーが発生しました。'}, status=500)
 
+    def get(self, request, *args, **kwargs):
+        return render(request, 'index.html') #index.htmlを返す
+    
+    
 class IngredientsView(View):
     def post(self, request, *args, **kwargs):
         name = request.POST.get('name') #フロントからのリクエストを取得
@@ -101,5 +105,4 @@ class IngredientsView(View):
         return JsonResponse({'message': 'Ingredients saved successfully!'}, status=201)
 
 
-    def get(self, request, *args, **kwargs):
-        return render(request, 'index.html') #index.htmlを返す
+    

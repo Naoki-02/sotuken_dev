@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     #追記
     'rest_framework',
     'corsheaders',
+    'service',
 ]
 
 MIDDLEWARE = [
