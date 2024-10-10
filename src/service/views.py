@@ -90,19 +90,32 @@ class ChatGPTView(View):
     
 class IngredientsView(View):
     def post(self, request, *args, **kwargs):
-        name = request.POST.get('name') #フロントからのリクエストを取得
-        quantity = request.POST.get('quantity') #フロントからのリクエストを取得
-        category =request.POST.get('category') #フロントからのリクエストを取得
+        try:
+            # name = request.POST.get('name') #フロントからのリクエストを取得
+            # quantity = request.POST.get('quantity') #フロントからのリクエストを取得
+            # category =request.POST.get('category') #フロントからのリクエストを取得
+            
+            #JSONからデータを取得
+            data = json.loads(request.body)
+            name = data.get('name')
+            quantity = data.get('quantity')
+            category = data.get('category')
+            
+            #データがすべて入っているか確認
+            if not name:
+                return JsonResponse({'message': 'Name is required'}, status=400)
+            
+            #モデルに保存
+            ingredients = Ingredients(
+                name=name,
+                quantity=quantity,
+                category=category
+            )
+            ingredients.save() #保存
+            
+            return JsonResponse({'message': 'Ingredients saved successfully!'}, status=201)
         
-
-        ingredients = Ingredients( #モデルに保存
-            name=name,
-            quantity=quantity,
-            category=category
-        )
-        ingredients.save() #保存
-
-        return JsonResponse({'message': 'Ingredients saved successfully!'}, status=201)
-
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     
