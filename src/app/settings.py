@@ -41,9 +41,11 @@ INSTALLED_APPS = [
     #追記
     'rest_framework',
     'corsheaders',
+    'service',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', #追記
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -51,9 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    #追記
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
+    
 ]
 
 ROOT_URLCONF = 'app.urls'
@@ -141,8 +141,12 @@ STATIC_ROOT = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 OEPNAI_API_KEY = os.environ.get('OPENAI_API_KEY')
-# CORS_ALLOW_ORIGINS = [
-#     "http://localhost:3000",
-#     "http://172.18.48.1:8000",
-#     "http://10.0.2.2:8000",
-# ]
+
+CSRF_COOKIE_HTTPONLY = False # 追記
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000'] # 追記
+# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
+# クッキー(CSRFトークンなど)を含めるための設定
+CORS_ALLOW_CREDENTIALS = True

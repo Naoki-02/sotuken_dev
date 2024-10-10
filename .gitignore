@@ -7,5 +7,6 @@ node_modules
 mariadb
 static
 src/service/__pycache__
+src/service/migrations
 .env
 tmp.json
