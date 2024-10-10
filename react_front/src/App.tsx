@@ -5,6 +5,7 @@ import AboutPage from './pages/AboutPage';
 import AddIngredientPage from './pages/AddIngredientPage';
 import AuthForm from './pages/authForm';
 import ContactPage from './pages/ContactPage';
+import FoodListPage from './pages/FoodListPage';
 import HomePage from './pages/HomePage';
 import Layout from './pages/Layout';
 import MultiIngredientForm from './pages/multi-ingredient-form';
@@ -19,6 +20,7 @@ function App() {
         <Route path="contact" element={<ContactPage />} />
         <Route path="add-ingredient" element={<AddIngredientPage />} />
         <Route path="multi-ingredient-form" element={<MultiIngredientForm />} />
+        <Route path="food-list" element={<FoodListPage />} />
       </Route>
     </Routes>
   );

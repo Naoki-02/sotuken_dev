@@ -23,9 +23,10 @@ export default function Layout({ children }: LayoutProps) {
                         </div>
                         <nav className="hidden md:flex space-x-4">
                             <Link to="/" className="text-gray-600 hover:text-gray-900">ホーム</Link>
-                            <Link to="/about" className="text-gray-600 hover:text-gray-900">About</Link>
-                            <Link to="/contact" className="text-gray-600 hover:text-gray-900">お問い合わせ</Link>
-                            <Link to="/auth" className="text-gray-600 hover:text-gray-900">ログイン</Link>
+                            <Link to="/food-list" className="text-gray-600 hover:text-gray-900">食材一覧</Link>
+                            <Link to="/about" className="text-gray-600 hover:text-gray-900">レシート読み取り</Link>
+                            <Link to="/multi-ingredient-form" className="text-gray-600 hover:text-gray-900">食材手動追加</Link>
+                            <Link to="/auth" className="text-gray-600 hover:text-gray-900">設定</Link>
                         </nav>
                         <div className="flex items-center">
                             <button className="p-2 rounded-full text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" aria-label="ユーザーアカウント">
@@ -46,9 +47,10 @@ export default function Layout({ children }: LayoutProps) {
                     <div className="md:hidden">
                         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                             <Link to="/" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">ホーム</Link>
-                            <Link to="/about" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">About</Link>
-                            <Link to="/contact" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">お問い合わせ</Link>
-                            <Link to="/auth" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">ログイン</Link>
+                            <Link to="/food-list" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">食材一覧</Link>
+                            <Link to="/about" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">レシート読み取り</Link>
+                            <Link to="/multi-ingredient-form" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">食材手動追加</Link>
+                            <Link to="/auth" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">設定</Link>
                         </div>
                     </div>
                 )}

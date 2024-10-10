@@ -38,6 +38,13 @@ export default function MultiIngredientForm() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         // ここで食材追加のロジックを実装します
+        // 送信するデータをJSON形式にまとめる
+        const data = {
+            ingredients: ingredients.map(({ id, ...rest }) => ({ ...rest }))
+        }
+
+        console.log("送信データ:", JSON.stringify(data, null, 2))
+        console.log(data)
         console.log(ingredients)
         // フォームをリセット
         setIngredients([{ id: 1, name: "", quantity: "", category: "" }])
