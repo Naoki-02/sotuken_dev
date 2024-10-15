@@ -39,7 +39,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     #追記
+    'django.contrib.sites',
+    #外部ライブラリ
     'rest_framework',
+    'rest_framework.authtoken',
+    'dj_rest_auth',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
     'corsheaders',
     'service',
 ]
@@ -53,6 +60,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     
 ]
 
@@ -142,11 +150,31 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 OEPNAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 
-CSRF_COOKIE_HTTPONLY = False # 追記
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000'] # 追記
-# CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
+    "http://localhost:5173",
 ]
+
+CSRF_COOKIE_HTTPONLY = False # 追記
+CSRF_TRUSTED_ORIGINS = ['http://localhost:5173'] # 追記
+# CORS_ALLOW_ALL_ORIGINS = True
+
 # クッキー(CSRFトークンなど)を含めるための設定
 CORS_ALLOW_CREDENTIALS = True
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+# dj-rest-authの設定
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # メール認証を不要にする（必要なら"mandatory"に変更）
+# ACCOUNT_EMAIL_REQUIRED = True  # メールアドレスを必須項目にする
