@@ -9,6 +9,7 @@ import FoodListPage from './pages/FoodListPage';
 import HomePage from './pages/HomePage';
 import Layout from './pages/Layout';
 import MultiIngredientForm from './pages/multi-ingredient-form';
+import SurveyPage from './pages/SurveyPage';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="add-ingredient" element={<AddIngredientPage />} />
         <Route path="multi-ingredient-form" element={<MultiIngredientForm />} />
         <Route path="food-list" element={<FoodListPage />} />
+        <Route path="survey" element={<SurveyPage />} />
       </Route>
     </Routes>
   );

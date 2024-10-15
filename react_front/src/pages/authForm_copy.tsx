@@ -25,8 +25,8 @@ export default function AuthForm() {
                     <TabsContent value="login">
                         <form className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="login-name">名前</Label>
-                                <Input id="login-name" type="text" required />
+                                <Label htmlFor="login-email">メールアドレス</Label>
+                                <Input id="login-email" type="email" placeholder="your@email.com" required />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="login-password">パスワード</Label>
