@@ -1,3 +1,4 @@
+import { useAuth } from '@/services/AuthContext'
 import { Facebook, Instagram, Menu, Twitter, User, X } from 'lucide-react'
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -8,6 +9,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
+    const { isAuthenticated } = useAuth()
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
@@ -27,8 +29,16 @@ export default function Layout({ children }: LayoutProps) {
                             <Link to="/about" className="text-gray-600 hover:text-gray-900">レシート読み取り</Link>
                             <Link to="/multi-ingredient-form" className="text-gray-600 hover:text-gray-900">食材手動追加</Link>
                             <Link to="/Survey" className="text-gray-600 hover:text-gray-900">アンケート</Link>
-                            <Link to="/auth" className="text-gray-600 hover:text-gray-900">設定</Link>
-                            <Link to="/logout" className="text-gray-600 hover:text-gray-900">ログアウト</Link>
+                            {!isAuthenticated && (
+                                <>
+                                    <Link to="/auth" className="text-gray-600 hover:text-gray-900">ログイン</Link>
+                                </>
+                            )}
+                            {isAuthenticated && (
+                                <>
+                                    <Link to="/logout" className="text-gray-600 hover:text-gray-900">ログアウト</Link>
+                                </>
+                            )}
                         </nav>
                         <div className="flex items-center">
                             <button className="p-2 rounded-full text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" aria-label="ユーザーアカウント">
@@ -53,8 +63,16 @@ export default function Layout({ children }: LayoutProps) {
                             <Link to="/about" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">レシート読み取り</Link>
                             <Link to="/multi-ingredient-form" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">食材手動追加</Link>
                             <Link to="/Survey" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">アンケート</Link>
-                            <Link to="/auth" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">設定</Link>
-                            <Link to="/logout" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">ログアウト</Link>
+                            {!isAuthenticated && (
+                                <>
+                                    <Link to="/auth" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">ログイン</Link>
+                                </>
+                            )}
+                            {isAuthenticated && (
+                                <>
+                                    <Link to="/logout" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">ログアウト</Link>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}

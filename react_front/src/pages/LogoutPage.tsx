@@ -37,7 +37,7 @@ const Logout: React.FC = () => {
         };
 
         logoutPage();
-    }, []);
+    }, [logout, navigate]);
 
     return <div>ログアウトしています...</div>;
 };
