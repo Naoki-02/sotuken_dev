@@ -39,7 +39,7 @@ export default function AuthForm() {
                     password: formData.password1
                 });
                 // console.log(formData.name, formData.password1);
-                // console.log(response.data);  // レスポンスの確認
+                console.log(response.data);  // レスポンスの確認
                 console.log('login post request success');
                 // ログイン成功後の処理を追加（例：トークンの保存など）
                 // トークンをlocalStorageに保存する

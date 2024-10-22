@@ -1,13 +1,18 @@
 import json
+import logging
 
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views import View
 from openai import OpenAI
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import Ingredients
 
+logger = logging.getLogger('myapp')
 
 class ChatGPTView(View):
     def post(self, request, *args, **kwargs):
@@ -88,34 +93,37 @@ class ChatGPTView(View):
         return render(request, 'index.html') #index.htmlを返す
     
     
-class IngredientsView(View):
+class IngredientsView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
         try:
-            # name = request.POST.get('name') #フロントからのリクエストを取得
-            # quantity = request.POST.get('quantity') #フロントからのリクエストを取得
-            # category =request.POST.get('category') #フロントからのリクエストを取得
-            
-            #JSONからデータを取得
-            data = json.loads(request.body)
-            name = data.get('name')
-            quantity = data.get('quantity')
-            category = data.get('category')
-            
-            #データがすべて入っているか確認
-            if not name:
-                return JsonResponse({'message': 'Name is required'}, status=400)
-            
-            #モデルに保存
-            ingredients = Ingredients(
-                name=name,
-                quantity=quantity,
-                category=category
-            )
-            ingredients.save() #保存
-            
-            return JsonResponse({'message': 'Ingredients saved successfully!'}, status=201)
-        
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+            data = request.data
+            logger.debug(f'Received data: {data}')
 
-    
+            ingredients_list = data.get('ingredients', [])
+
+            if not ingredients_list:
+                logger.warning('No ingredients provided in the request data')
+                return JsonResponse({'message': 'Ingredients are required'}, status=400)
+
+            for ingredient_data in ingredients_list:
+                if not ingredient_data.get('name'):
+                    logger.warning('Name not provided for an ingredient')
+                    return JsonResponse({'message': 'Name is required for each ingredient'}, status=400)
+
+                ingredients = Ingredients(
+                    user_id=request.user.id,
+                    name=ingredient_data.get('name'),
+                    quantity=ingredient_data.get('quantity'),
+                    category=ingredient_data.get('category')
+                )
+                ingredients.save()
+
+            logger.info('All ingredients saved successfully')
+            return JsonResponse({'message': 'Ingredients saved successfully!'}, status=201)
+
+        except Exception as e:
+            logger.error('An error occurred', exc_info=True)
+            return JsonResponse({'error': 'An internal server error occurred'}, status=500)
+

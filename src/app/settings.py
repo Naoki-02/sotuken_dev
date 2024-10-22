@@ -170,11 +170,48 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
+    # 'DEFAULT_PERMISSION_CLASSES': (
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ),
 }
 
 # dj-rest-authの設定
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # メール認証を不要にする（必要なら"mandatory"に変更）
 # ACCOUNT_EMAIL_REQUIRED = True  # メールアドレスを必須項目にする
+
+import os
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'detailed': {
+            'format': '{levelname} {asctime} {module} {message} {pathname}:{lineno}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',  # DEBUGレベルからのメッセージをログに出力
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'warnings.log'),
+            'formatter': 'detailed',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'detailed',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',  # DEBUGレベルからのメッセージをログに出力
+            'propagate': True,
+        },
+        'myapp': {  # 特定のアプリケーションのロガーを追加
+            'handlers': ['file', 'console'],
+            'level': 'INFO',  # INFOレベルのメッセージも出力
+            'propagate': False,  # これがTrueの場合、djangoロガーにも出力される
+        },
+    },
+}
