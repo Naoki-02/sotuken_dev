@@ -8,5 +8,8 @@ mariadb
 static
 src/service/__pycache__
 src/service/migrations
+src/warnings.log
 .env
 tmp.json
+sotuken_dev.session.sql
+.vscode

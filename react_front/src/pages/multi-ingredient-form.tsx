@@ -5,8 +5,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import axios from 'axios'
 import { PlusCircle, Trash2 } from "lucide-react"
 import { useState } from "react"
+// import { getCsrfToken } from "../services/csrf"
 
 interface Ingredient {
     id: number;
@@ -42,10 +44,26 @@ export default function MultiIngredientForm() {
         const data = {
             ingredients: ingredients.map(({ id, ...rest }) => ({ ...rest }))
         }
+        const token = localStorage.getItem('token');
 
-        console.log("送信データ:", JSON.stringify(data, null, 2))
-        console.log(data)
-        console.log(ingredients)
+        axios.post('http://localhost:8000/service/ingredients/', data, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${token}`, // トークンをヘッダーに追加
+                // 'X-CSRFToken': getCsrfToken()  // CSRFトークンをヘッダーに追加
+            }
+        })
+        .then(response => {
+            console.log('Success:', response.data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+
+        // console.log("送信データ:", JSON.stringify(data))
+        // // console.log("送信データ:", JSON.stringify(ingredients, null, 2))
+        // console.log(data)
+        // console.log(ingredients)
         // フォームをリセット
         setIngredients([{ id: 1, name: "", quantity: "", category: "" }])
     }
