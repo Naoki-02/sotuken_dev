@@ -135,4 +135,17 @@ class IngredientsListView(generics.ListAPIView):
 
     def get_queryset(self):
         return Ingredients.objects.filter(user=self.request.user)
+    
+class IngredientsDelete(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def delete(self,request,pk):
+        try:
+            Ingredients.objects.get(pk=pk).delete()
+            return JsonResponse({'message': '材料が正常に削除されました！'}, status=200)
+        except Ingredients.DoesNotExist:
+            return JsonResponse({'error': '材料が見つかりません'}, status=404)
+        except Exception as e:
+            logger.error('エラーが発生しました', exc_info=True)
+            return JsonResponse({'error': '内部サーバーエラーが発生しました'}, status=500)
 
