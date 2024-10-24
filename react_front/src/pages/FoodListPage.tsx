@@ -3,7 +3,7 @@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -50,6 +50,7 @@ export default function FoodListScreen() {
     const [editingItem, setEditingItem] = useState<Ingredient | null>(null)
     const [selectedCategory, setSelectedCategory] = useState<string>('all')
     const [itemToDelete, setItemToDelete] = useState<Ingredient | null>(null)
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false) // ダイアログの開閉状態を管理
 
     // サーバーからデータを取得するGETリクエスト
     useEffect(() => {
@@ -63,12 +64,6 @@ export default function FoodListScreen() {
                 })
                 console.log("食品データの取得に成功しました:")
                 console.log(response.data)
-
-                // // idがない場合に付与
-                // const itemsWithId = response.data.map((item, index) => ({
-                //     ...item,
-                //     id: item.id || index + 1, // idがない場合、インデックスに1を加えた値を使用
-                // }));
 
                 setFoodItems(response.data);
 
@@ -101,11 +96,23 @@ export default function FoodListScreen() {
 
     const handleEdit = (item: Ingredient) => {
         setEditingItem(item)
+        setIsEditDialogOpen(true) // 編集ダイアログを開く
     }
 
-    const handleSave = (updatedItem: Ingredient) => {
-        setFoodItems(foodItems.map(item => item.id === updatedItem.id ? updatedItem : item))
-        setEditingItem(null)
+    const handleSave = async (updatedItem: Ingredient) => {
+        try {
+            const token = localStorage.getItem('token'); // 認証トークンの取得
+            await axios.put(`http://localhost:8000/service/update_ingredients/${updatedItem.id}/`, updatedItem, {
+                headers: {
+                    Authorization: `Token ${token}`, // トークンをヘッダーに設定
+                },
+            });
+            setFoodItems(foodItems.map(item => item.id === updatedItem.id ? updatedItem : item))
+            setEditingItem(null)
+            setIsEditDialogOpen(false) // 編集ダイアログを閉じる
+        } catch (error) {
+            console.error("更新に失敗しました:", error);
+        }
     }
 
     return (
@@ -154,7 +161,7 @@ export default function FoodListScreen() {
                                     <TableCell>{categoryMap[item.category] || item.category}</TableCell> {/* カテゴリーの変換 */}
                                     <TableCell>
                                         <div className="flex space-x-2">
-                                            <Dialog>
+                                            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                                                 <DialogTrigger asChild>
                                                     <Button variant="outline" size="icon" onClick={() => handleEdit(item)}>
                                                         <Pencil className="h-4 w-4" />
@@ -164,6 +171,9 @@ export default function FoodListScreen() {
                                                     <DialogHeader>
                                                         <DialogTitle>食品を編集</DialogTitle>
                                                     </DialogHeader>
+                                                    <DialogDescription>
+                                                        食品の詳細を編集できます。
+                                                    </DialogDescription>
                                                     <EditForm item={editingItem} onSave={handleSave} />
                                                 </DialogContent>
                                             </Dialog>
@@ -198,6 +208,8 @@ export default function FoodListScreen() {
     )
 }
 
+// 食材編集フォームのコンポーネント
+
 interface EditFormProps {
     item: Ingredient | null
     onSave: (item: Ingredient) => void
@@ -210,7 +222,7 @@ function EditForm({ item, onSave }: EditFormProps) {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
-        setEditedItem({ ...editedItem, [name]: name === 'quantity' ? parseInt(value) : value })
+        setEditedItem({ ...editedItem, [name]: value }) // 文字列として扱う
     }
 
     const handleCategoryChange = (value: string) => {
