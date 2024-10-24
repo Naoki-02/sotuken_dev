@@ -95,7 +95,7 @@ class ChatGPTView(View):
         return render(request, 'index.html') #index.htmlを返す
     
     
-class IngredientsView(APIView):
+class PostIngredientsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -129,14 +129,14 @@ class IngredientsView(APIView):
             logger.error('An error occurred', exc_info=True)
             return JsonResponse({'error': 'An internal server error occurred'}, status=500)
         
-class IngredientsListView(generics.ListAPIView):
+class GetIngredientsListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated] #ユーザ認証が必要
     serializer_class = IngredientSerializer
 
     def get_queryset(self):
         return Ingredients.objects.filter(user=self.request.user)
     
-class IngredientsDelete(APIView):
+class DeleteIngredients(APIView):
     permission_classes = [IsAuthenticated]
     
     def delete(self,request,pk):
@@ -149,3 +149,25 @@ class IngredientsDelete(APIView):
             logger.error('エラーが発生しました', exc_info=True)
             return JsonResponse({'error': '内部サーバーエラーが発生しました'}, status=500)
 
+class UpdateIngredients(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, pk):
+        try:
+            ingredient = Ingredients.objects.get(pk=pk)
+            data = request.data
+
+            if 'name' in data:
+                ingredient.name = data['name']
+            if 'quantity' in data:
+                ingredient.quantity = data['quantity']
+            if 'category' in data:
+                ingredient.category = data['category']
+
+            ingredient.save()
+            return JsonResponse({'message': '材料が正常に更新されました！'}, status=200)
+        except Ingredients.DoesNotExist:
+            return JsonResponse({'error': '材料が見つかりません'}, status=404)
+        except Exception as e:
+            logger.error('エラーが発生しました', exc_info=True)
+            return JsonResponse({'error': '内部サーバーエラーが発生しました'}, status=500)
