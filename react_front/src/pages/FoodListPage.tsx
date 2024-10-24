@@ -1,5 +1,6 @@
 'use client'
 
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -48,6 +49,7 @@ export default function FoodListScreen() {
     const [searchTerm, setSearchTerm] = useState('')
     const [editingItem, setEditingItem] = useState<Ingredient | null>(null)
     const [selectedCategory, setSelectedCategory] = useState<string>('all')
+    const [itemToDelete, setItemToDelete] = useState<Ingredient | null>(null)
 
     // サーバーからデータを取得するGETリクエスト
     useEffect(() => {
@@ -60,14 +62,16 @@ export default function FoodListScreen() {
                     },
                 })
                 console.log("食品データの取得に成功しました:")
-                
-                // idがない場合に付与
-                const itemsWithId = response.data.map((item, index) => ({
-                    ...item,
-                    id: item.id || index + 1, // idがない場合、インデックスに1を加えた値を使用
-                }));
+                console.log(response.data)
 
-                setFoodItems(itemsWithId)
+                // // idがない場合に付与
+                // const itemsWithId = response.data.map((item, index) => ({
+                //     ...item,
+                //     id: item.id || index + 1, // idがない場合、インデックスに1を加えた値を使用
+                // }));
+
+                setFoodItems(response.data);
+
             } catch (error) {
                 console.error("食品データの取得に失敗しました:", error)
             }
@@ -81,8 +85,18 @@ export default function FoodListScreen() {
         (selectedCategory === 'all' || item.category === selectedCategory)
     )
 
-    const handleDelete = (id: number) => {
-        setFoodItems(foodItems.filter(item => item.id !== id))
+    const handleDelete = async (id: number) => {
+        try {
+            const token = localStorage.getItem('token'); // 認証トークンの取得
+            await axios.delete(`http://localhost:8000/service/delete_ingredients/${id}/`, {
+                headers: {
+                    Authorization: `Token ${token}`, // トークンをヘッダーに設定
+                },
+            });
+            setFoodItems(foodItems.filter(item => item.id !== id));
+        } catch (error) {
+            console.error("削除に失敗しました:", error);
+        }
     }
 
     const handleEdit = (item: Ingredient) => {
@@ -153,9 +167,25 @@ export default function FoodListScreen() {
                                                     <EditForm item={editingItem} onSave={handleSave} />
                                                 </DialogContent>
                                             </Dialog>
-                                            <Button variant="outline" size="icon" onClick={() => handleDelete(item.id)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="outline" size="icon" onClick={() => setItemToDelete(item)}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>本当に削除しますか？</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            この操作は取り消せません。{item.name}を食品リストから削除します。
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={() => handleDelete(item.id)}>削除</AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -224,5 +254,5 @@ function EditForm({ item, onSave }: EditFormProps) {
             <Button type="submit">保存</Button>
         </form>
     )
-    
+
 }
