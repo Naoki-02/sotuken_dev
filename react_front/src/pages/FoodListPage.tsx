@@ -7,32 +7,74 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import axios from 'axios'
 import { Pencil, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-interface FoodItem {
+interface Ingredient {
     id: number
     name: string
-    quantity: number
+    quantity: string
     expirationDate: string
     category: string
 }
 
-const initialFoodItems: FoodItem[] = [
-    { id: 1, name: "りんご", quantity: 3, expirationDate: "2023-06-15", category: "果物" },
-    { id: 2, name: "牛乳", quantity: 1, expirationDate: "2023-06-10", category: "乳製品" },
-    { id: 3, name: "パン", quantity: 2, expirationDate: "2023-06-08", category: "穀物" },
-    { id: 4, name: "卵", quantity: 6, expirationDate: "2023-06-20", category: "タンパク質" },
-    { id: 5, name: "トマト", quantity: 4, expirationDate: "2023-06-12", category: "野菜" },
-]
+const categories = [
+    { value: "vegetable", label: "野菜" },
+    { value: "fruit", label: "果物" },
+    { value: "meat", label: "肉" },
+    { value: "fish", label: "魚" },
+    { value: "dairy", label: "乳製品" },
+    { value: "grain", label: "穀物" },
+    { value: "spice", label: "調味料" },
+    { value: "other", label: "その他" },
+];
 
-const categories = ["果物", "野菜", "乳製品", "穀物", "タンパク質", "調味料", "その他"]
+// 英語から日本語へのカテゴリーのマッピング
+const categoryMap: Record<string, string> = {
+    vegetable: "野菜",
+    fruit: "果物",
+    meat: "肉",
+    fish: "魚",
+    dairy: "乳製品",
+    grain: "穀物",
+    spice: "調味料",
+    other: "その他",
+};
+
 
 export default function FoodListScreen() {
-    const [foodItems, setFoodItems] = useState<FoodItem[]>(initialFoodItems)
+    const [foodItems, setFoodItems] = useState<Ingredient[]>([])
     const [searchTerm, setSearchTerm] = useState('')
-    const [editingItem, setEditingItem] = useState<FoodItem | null>(null)
+    const [editingItem, setEditingItem] = useState<Ingredient | null>(null)
     const [selectedCategory, setSelectedCategory] = useState<string>('all')
+
+    // サーバーからデータを取得するGETリクエスト
+    useEffect(() => {
+        const fetchFoodItems = async () => {
+            try {
+                const token = localStorage.getItem('token') // 認証トークンの取得
+                const response = await axios.get<Ingredient[]>('http://localhost:8000/service/get_ingredients/', {
+                    headers: {
+                        Authorization: `Token ${token}`, // トークンをヘッダーに設定
+                    },
+                })
+                console.log("食品データの取得に成功しました:")
+                
+                // idがない場合に付与
+                const itemsWithId = response.data.map((item, index) => ({
+                    ...item,
+                    id: item.id || index + 1, // idがない場合、インデックスに1を加えた値を使用
+                }));
+
+                setFoodItems(itemsWithId)
+            } catch (error) {
+                console.error("食品データの取得に失敗しました:", error)
+            }
+        }
+
+        fetchFoodItems()
+    }, [])
 
     const filteredItems = foodItems.filter(item =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -43,11 +85,11 @@ export default function FoodListScreen() {
         setFoodItems(foodItems.filter(item => item.id !== id))
     }
 
-    const handleEdit = (item: FoodItem) => {
+    const handleEdit = (item: Ingredient) => {
         setEditingItem(item)
     }
 
-    const handleSave = (updatedItem: FoodItem) => {
+    const handleSave = (updatedItem: Ingredient) => {
         setFoodItems(foodItems.map(item => item.id === updatedItem.id ? updatedItem : item))
         setEditingItem(null)
     }
@@ -74,7 +116,7 @@ export default function FoodListScreen() {
                             <SelectContent>
                                 <SelectItem value="all">全てのカテゴリー</SelectItem>
                                 {categories.map((category) => (
-                                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                                    <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -95,7 +137,7 @@ export default function FoodListScreen() {
                                     <TableCell>{item.name}</TableCell>
                                     <TableCell>{item.quantity}</TableCell>
                                     <TableCell>{item.expirationDate}</TableCell>
-                                    <TableCell>{item.category}</TableCell>
+                                    <TableCell>{categoryMap[item.category] || item.category}</TableCell> {/* カテゴリーの変換 */}
                                     <TableCell>
                                         <div className="flex space-x-2">
                                             <Dialog>
@@ -127,12 +169,12 @@ export default function FoodListScreen() {
 }
 
 interface EditFormProps {
-    item: FoodItem | null
-    onSave: (item: FoodItem) => void
+    item: Ingredient | null
+    onSave: (item: Ingredient) => void
 }
 
 function EditForm({ item, onSave }: EditFormProps) {
-    const [editedItem, setEditedItem] = useState<FoodItem | null>(item)
+    const [editedItem, setEditedItem] = useState<Ingredient | null>(item)
 
     if (!editedItem) return null
 
@@ -160,7 +202,7 @@ function EditForm({ item, onSave }: EditFormProps) {
             </div>
             <div>
                 <Label htmlFor="quantity">数量</Label>
-                <Input id="quantity" name="quantity" type="number" value={editedItem.quantity} onChange={handleChange} />
+                <Input id="quantity" name="quantity" value={editedItem.quantity} onChange={handleChange} />
             </div>
             <div>
                 <Label htmlFor="expirationDate">消費期限</Label>
@@ -174,7 +216,7 @@ function EditForm({ item, onSave }: EditFormProps) {
                     </SelectTrigger>
                     <SelectContent>
                         {categories.map((category) => (
-                            <SelectItem key={category} value={category}>{category}</SelectItem>
+                            <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
@@ -182,4 +224,5 @@ function EditForm({ item, onSave }: EditFormProps) {
             <Button type="submit">保存</Button>
         </form>
     )
+    
 }

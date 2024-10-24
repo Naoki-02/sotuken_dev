@@ -6,11 +6,13 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views import View
 from openai import OpenAI
+from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Ingredients
+from .serializers import IngredientSerializer
 
 logger = logging.getLogger('myapp')
 
@@ -126,4 +128,11 @@ class IngredientsView(APIView):
         except Exception as e:
             logger.error('An error occurred', exc_info=True)
             return JsonResponse({'error': 'An internal server error occurred'}, status=500)
+        
+class IngredientsListView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated] #ユーザ認証が必要
+    serializer_class = IngredientSerializer
+
+    def get_queryset(self):
+        return Ingredients.objects.filter(user=self.request.user)
 
