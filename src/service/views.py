@@ -1,12 +1,15 @@
+import base64
 import json
 import logging
 
+import requests
 from django.conf import settings
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views import View
 from openai import OpenAI
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -171,3 +174,52 @@ class UpdateIngredients(APIView):
         except Exception as e:
             logger.error('エラーが発生しました', exc_info=True)
             return JsonResponse({'error': '内部サーバーエラーが発生しました'}, status=500)
+
+class OCRView(APIView):
+    permission_classes = [IsAuthenticated] #ユーザ認証が必要
+    def post(self,request,*args,**kwargs):
+        #ファイルを取得
+        uploaded_file: InMemoryUploadedFile = request.FILES.get('image',None)
+        
+        if not uploaded_file:
+            return Response({"error": "No image file provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # 画像データをBase64エンコード
+            image_data = base64.b64encode(uploaded_file.read()).decode("utf-8")
+
+            # Google Vision APIのURL
+            url = f"https://vision.googleapis.com/v1/images:annotate?key={settings.VISION_API_KEY}"
+
+            # リクエストデータの作成
+            request_data = {
+                "requests": [
+                    {
+                        "image": {"content": image_data},
+                        "features": [{"type": "TEXT_DETECTION"}],
+                    }
+                ]
+            }
+
+            # APIリクエストを送信
+            response = requests.post(url, json=request_data)
+
+            # エラー処理
+            if response.status_code != 200:
+                return Response(
+                    {"error": f"Error: {response.status_code}, {response.text}"},
+                    status=response.status_code,
+                )
+
+            # レスポンスからテキストを抽出
+            response_data = response.json()
+            try:
+                text = response_data["responses"][0]["textAnnotations"][0]["description"]
+            except (KeyError, IndexError):
+                text = "No text detected."
+
+            return Response({"text": text}, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
