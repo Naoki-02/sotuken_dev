@@ -4,7 +4,7 @@ import './App.css';
 import AboutPage from './pages/AboutPage';
 import AddIngredientPage from './pages/AddIngredientPage';
 import AuthForm from './pages/authForm';
-import ContactPage from './pages/ContactPage';
+import CameraApp from './pages/camera';
 import FoodListPage from './pages/FoodListPage';
 import HomePage from './pages/HomePage';
 import Layout from './pages/Layout';
@@ -22,7 +22,6 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="auth" element={<AuthForm />} />
           <Route path="about" element={<AboutPage />} />
-          <Route path="contact" element={<ContactPage />} />
           {/* 保護されたルート */}
           <Route element={<ProtectedRoute />} >
             <Route path="add-ingredient" element={<AddIngredientPage />} />
@@ -30,6 +29,7 @@ function App() {
             <Route path="food-list" element={<FoodListPage />} />
             <Route path="survey" element={<SurveyPage />} />
             <Route path="logout" element={<Logout />} />
+            <Route path="camera" element={<CameraApp />} />
           </Route>
         </Route>
       </Routes>

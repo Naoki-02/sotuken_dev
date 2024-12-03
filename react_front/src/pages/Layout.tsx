@@ -26,7 +26,7 @@ export default function Layout({ children }: LayoutProps) {
                         <nav className="hidden md:flex space-x-4">
                             <Link to="/" className="text-gray-600 hover:text-gray-900">ホーム</Link>
                             <Link to="/food-list" className="text-gray-600 hover:text-gray-900">食材一覧</Link>
-                            <Link to="/about" className="text-gray-600 hover:text-gray-900">レシート読み取り</Link>
+                            <Link to="/camera" className="text-gray-600 hover:text-gray-900">レシート読み取り</Link>
                             <Link to="/multi-ingredient-form" className="text-gray-600 hover:text-gray-900">食材手動追加</Link>
                             <Link to="/Survey" className="text-gray-600 hover:text-gray-900">アンケート</Link>
                             {!isAuthenticated && (
@@ -60,7 +60,7 @@ export default function Layout({ children }: LayoutProps) {
                         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                             <Link to="/" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">ホーム</Link>
                             <Link to="/food-list" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">食材一覧</Link>
-                            <Link to="/about" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">レシート読み取り</Link>
+                            <Link to="/camera" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">レシート読み取り</Link>
                             <Link to="/multi-ingredient-form" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">食材手動追加</Link>
                             <Link to="/Survey" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">アンケート</Link>
                             {!isAuthenticated && (

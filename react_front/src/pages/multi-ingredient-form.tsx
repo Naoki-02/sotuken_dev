@@ -5,9 +5,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import axios from 'axios'
 import { PlusCircle, Trash2 } from "lucide-react"
 import { useState } from "react"
+import { postRequest } from "../services/postRequest"
 // import { getCsrfToken } from "../services/csrf"
 
 interface Ingredient {
@@ -37,28 +37,21 @@ export default function MultiIngredientForm() {
         ))
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        // ここで食材追加のロジックを実装します
+        // 食材追加のロジック
         // 送信するデータをJSON形式にまとめる
         const data = {
             ingredients: ingredients.map(({ id, ...rest }) => ({ ...rest }))
         }
         const token = localStorage.getItem('token');
 
-        axios.post('http://localhost:8000/service/ingredients/', data, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Token ${token}`, // トークンをヘッダーに追加
-                // 'X-CSRFToken': getCsrfToken()  // CSRFトークンをヘッダーに追加
-            }
-        })
-        .then(response => {
-            console.log('Success:', response.data);
-        })
-        .catch(error => {
+        try {
+            const response = await postRequest('http://localhost:8000/service/post_ingredients/', data, token);
+            console.log('Success:', response);
+        } catch (error) {
             console.error('Error:', error);
-        });
+        }
 
         // console.log("送信データ:", JSON.stringify(data))
         // // console.log("送信データ:", JSON.stringify(ingredients, null, 2))
@@ -71,8 +64,8 @@ export default function MultiIngredientForm() {
     return (
         <Card className="w-full max-w-2xl mx-auto">
             <CardHeader>
-                <CardTitle>複数食材追加</CardTitle>
-                <CardDescription>複数の食材情報を入力してください。</CardDescription>
+                <CardTitle>食材追加</CardTitle>
+                <CardDescription>食材情報を入力してください。</CardDescription>
             </CardHeader>
             <form onSubmit={handleSubmit}>
                 <CardContent className="space-y-4">

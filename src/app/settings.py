@@ -149,6 +149,7 @@ STATIC_ROOT = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 OEPNAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+VISION_API_KEY = os.environ.get('VISION_API_KEY')
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
