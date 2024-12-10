@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+import re
 
 import requests
 from django.conf import settings
@@ -213,12 +214,63 @@ class OCRView(APIView):
 
             # レスポンスからテキストを抽出
             response_data = response.json()
+            
+            # 画像OCRデータをJSONファイルに保存
+            # try:
+            #     with open("camera.json", "w", encoding="utf-8") as json_file:
+            #         json.dump(response_data, json_file, ensure_ascii=False, indent=4)
+            #     print(f"Data successfully saved to JSON file.")
+            # except Exception as e:
+            #     print(f"An error occurred while saving to JSON: {e}")
+                
             try:
                 text = response_data["responses"][0]["textAnnotations"][0]["description"]
             except (KeyError, IndexError):
                 text = "No text detected."
+                
+            # 食材らしい項目を抽出するための正規表現
+            pattern = r"^(03|13|01)\*?([^¥]*)"  # 03*, 13*, 01* で始まる商品名を抽出
 
-            return Response({"text": text}, status=status.HTTP_200_OK)
+            # 結果を格納するリスト
+            ingredients_list = []
+
+            # テキストを行ごとに分割
+            lines = text.split("\n")
+            for line in lines:
+                match = re.match(pattern, line)
+                if match:
+                    category = match.group(1)  # 03, 13, 01
+                    rest = match.group(2).strip()  # 商品名と数量
+                    if " " in rest:  # スペースで分割して数量を抽出
+                        name, quantity = rest.rsplit(" ", 1)
+                    else:
+                        name, quantity = rest, "1個"  # 数量がない場合はデフォルトで1個
+                        
+                    # type を追加
+                    if category == "03":
+                        item_type = "vegetable"
+                    elif category == "13":
+                        item_type = "other"
+                    elif category == "01":
+                        item_type = "meat"
+                    else:
+                        item_type = "other"
+                    ingredients_list.append({"category": item_type, "name": name, "quantity": quantity})
+
+            for ingredient_data in ingredients_list:
+                    if not ingredient_data:
+                        logger.warning('Name not provided for an ingredient')
+                        return JsonResponse({'message': 'Name is required for each ingredient'}, status=400)
+
+                    ingredients = Ingredients(
+                        user_id=request.user.id,
+                        name=ingredient_data.get('name'),
+                        quantity=ingredient_data.get('quantity'),
+                        category=ingredient_data.get('category')
+                    )
+                    ingredients.save()
+                
+            return Response({"message": "保存完了しました。" }, status=status.HTTP_200_OK)
         
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

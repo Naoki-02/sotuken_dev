@@ -10,6 +10,6 @@ src/service/__pycache__
 src/service/migrations
 src/warnings.log
 .env
-tmp.json
+*.json
 sotuken_dev.session.sql
 .vscode
