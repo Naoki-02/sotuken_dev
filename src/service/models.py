@@ -23,7 +23,7 @@ class Ingredients(models.Model):
     quantity = models.CharField(
         verbose_name='数量', # 管理画面での表示名
         blank=False, # 必須項目
-        null=False, # 必須項目
+        null=True, # 必須項目
         max_length=10, # 最大文字数
         default='1個', # デフォルト値
         validators=[
@@ -31,14 +31,15 @@ class Ingredients(models.Model):
                 regex=u'^[0-9]+(個|kg|g|ml|L)?$', # 正規表現のみ許可
                 message='半角数字と単位（個, kg, g, ml, L）で入力してください', # エラーメッセージ
                 ),
-            validators.MinLengthValidator(2), # 最小文字数
+            validators.MinLengthValidator(1), # 最小文字数
             validators.MaxLengthValidator(10)] # 最大文字数
     )
     category = models.CharField(
         verbose_name='カテゴリ', # 管理画面での表示名
         blank=False, # 必須項目
-        null=False, # 必須項目
+        null=True, # 必須項目
         max_length=10, # 最大文字数
+        default='other', # デフォルト値
         validators=[
             validators.RegexValidator(
                 regex=u'^[a-zA-Z]+$', # Only allow English letters
