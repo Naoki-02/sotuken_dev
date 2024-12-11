@@ -13,6 +13,7 @@ import MultiIngredientForm from './pages/multi-ingredient-form';
 import SurveyPage from './pages/SurveyPage';
 import { AuthProvider } from './services/AuthContext';
 import ProtectedRoute from './services/protectedRoute';
+import RecipePage from './services/recipe-get';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
             <Route path="survey" element={<SurveyPage />} />
             <Route path="logout" element={<Logout />} />
             <Route path="camera" element={<CameraApp />} />
+            <Route path='recipe' element={<RecipePage />} />
           </Route>
         </Route>
       </Routes>
