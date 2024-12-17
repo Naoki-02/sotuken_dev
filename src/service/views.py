@@ -228,6 +228,30 @@ class DeleteIngredients(APIView):
         except Exception as e:
             logger.error('エラーが発生しました', exc_info=True)
             return JsonResponse({'error': '内部サーバーエラーが発生しました'}, status=500)
+        
+class DeleteUseIngredient(APIView):
+    permission_classes = [IsAuthenticated]
+    def delete(self, request):
+        try:
+            names = request.data.get("names", [])  # 複数の食材名をリストとして取得
+            not_found_items=[]
+            
+            for name in names:
+                ingredient = Ingredients.objects.filter(user=request.user, name=name).first()
+                if ingredient:
+                    ingredient.delete()
+                else:
+                    not_found_items.append(name)
+                    
+            resopnse = {'message': '材料が正常に削除されました！'}
+            if not_found_items:
+                resopnse['not_found_items'] = not_found_items
+                
+            return JsonResponse(resopnse, status=200)
+        
+        except Exception as e:
+            logger.error('エラーが発生しました', exc_info=True)
+            return JsonResponse({'error': '内部サーバーエラーが発生しました'}, status=500)
 
 class UpdateIngredients(APIView):
     permission_classes = [IsAuthenticated]
