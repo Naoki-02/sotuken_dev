@@ -31,7 +31,7 @@ export default function Layout({ children }: LayoutProps) {
                             <Link to="/camera" className="text-gray-600 hover:text-gray-900">レシート読み取り</Link>
                             <Link to="/multi-ingredient-form" className="text-gray-600 hover:text-gray-900">食材手動追加</Link>
                             <Link to="/Survey" className="text-gray-600 hover:text-gray-900">アンケート</Link>
-                            <Link to="/suggestion" className="text-gray-600 hover:text-gray-900">料理提案</Link>
+                            <Link to="/recipe-suggestion" className="text-gray-600 hover:text-gray-900">料理提案</Link>
                             {!isAuthenticated && (
                                 <Link to="/auth" className="text-gray-600 hover:text-gray-900">ログイン</Link>
                             )}
@@ -59,7 +59,7 @@ export default function Layout({ children }: LayoutProps) {
                             <Link to="/camera" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">レシート読み取り</Link>
                             <Link to="/multi-ingredient-form" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">食材手動追加</Link>
                             <Link to="/Survey" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">アンケート</Link>
-                            <Link to="/suggestion" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">料理提案</Link>
+                            <Link to="/recipe-suggestion" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">料理提案</Link>
                             {!isAuthenticated && (
                                 <Link to="/auth" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">ログイン</Link>
                             )}
@@ -84,7 +84,7 @@ export default function Layout({ children }: LayoutProps) {
                     <div className="flex flex-col md:flex-row justify-between items-center">
                         <div className="mb-4 md:mb-0">
                             <p className="text-sm text-gray-600">
-                                © 2023 MyApp Inc. All rights reserved.
+                                © 2024 MyApp Inc. All rights reserved.
                             </p>
                         </div>
                         <nav className="mb-4 md:mb-0">

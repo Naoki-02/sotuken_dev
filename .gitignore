@@ -13,3 +13,4 @@ src/warnings.log
 *.json
 sotuken_dev.session.sql
 .vscode
+*.txt

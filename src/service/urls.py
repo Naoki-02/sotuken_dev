@@ -9,6 +9,5 @@ urlpatterns = [
     path('delete_ingredients/<int:pk>/',views.DeleteIngredients.as_view(), name='delete_ingredients'),
     path('update_ingredients/<int:pk>/',views.UpdateIngredients.as_view(), name='update_ingredients'),
     path('ocr/',views.OCRView.as_view(), name='ocr'),
-    # path('get/', views.GetAPIView.as_view(), name='get'),
-    # path('post/', views.PostAPIView.as_view(), name='post'),
+    path('get_recipes/',views.RecipeSuggestionView.as_view(), name='get_recipes'),
 ]
