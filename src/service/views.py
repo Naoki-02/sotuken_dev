@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+import os
 import re
 
 import requests
@@ -20,7 +21,9 @@ from .serializers import IngredientSerializer
 
 logger = logging.getLogger('myapp')
 
-class ChatGPTView(View):
+class ChatGPTView(APIView):
+    permission_classes = [IsAuthenticated]
+    
     def post(self, request, *args, **kwargs):
         # client = OpenAI(api_key=settings.OEPNAI_API_KEY)
         user_message = request.POST.get('message')
@@ -94,11 +97,84 @@ class ChatGPTView(View):
         #     return JsonResponse({'error': 'APIキーが無効です。設定を確認してください。'}, status=401)
         except Exception as e:
             return JsonResponse({'error': 'ChatGPT APIへのリクエスト中にエラーが発生しました。'}, status=500)
-
+    
+class RecipeSuggestionView(APIView):
+     # このビューに認証を必須にする
+    permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
-        return render(request, 'index.html') #index.htmlを返す
-    
-    
+        try:
+            # 現在ログインしているユーザーの材料を取得
+            ingredients = Ingredients.objects.filter(user=request.user)
+            ingredient_names = [ingredient.name for ingredient in ingredients]
+            
+
+            if not ingredient_names:
+                return JsonResponse({"error": "No ingredients found for the user."}, status=400)
+
+            # ChatGPT API用プロンプトを生成
+            prompt = self.generate_prompt(ingredient_names)
+            ststem_prompt = """
+            あなたは料理の専門家です。
+            ユーザからの材料リストを基に作れる料理を提案してください。以下のフォーマットで結果を返してください：
+            [
+            {
+                "id": 数字,
+                "name": "料理名",
+                "ingredients": ["必要な材料1", "必要な材料2", ...],
+                "description": "料理の簡単な説明",
+                "instructions": [
+                "手順1",
+                "手順2",
+                "手順3",
+                ...
+                ],
+                "cookingTime": "調理時間（例: 約30分）",
+                "difficulty": "難易度（例: 簡単、普通、難しい）"
+            },
+            ...
+            ]
+            
+            ※ レシピは最低6つ提案してください。
+            ※ 可能な限り所持している材料を活用してください。
+            ※ 所持していない材料が必要な場合は、それを補足材料としてリストに含めてください。
+            ※ 簡単な説明と手順を具体的に記述してください。調味料も含めてください。
+            ※ 必要な材料に調味料などは含めないでください。
+            ※ JSON形式でのみ返答してください。不要な文字やフォーマットは一切含めないでください。
+            """
+
+            # ChatGPT APIにリクエストを送信
+            client = OpenAI(api_key=settings.OEPNAI_API_KEY)
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": ststem_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=2000,
+                temperature=0.8,
+            )
+
+            # APIのレスポンスを解析
+            recipe_suggestions = response.choices[0].message.content
+            # レスポンス内容をテキストファイルに保存
+            file_path = os.path.join(settings.BASE_DIR, "debug_response.txt")
+            with open(file_path, "w", encoding="utf-8") as file:
+                file.write(recipe_suggestions)
+
+
+            return JsonResponse({"recipes": json.loads(recipe_suggestions)}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    def generate_prompt(self, ingredients):
+        # ChatGPT API用のプロンプトを生成するメソッド。
+        return f"""
+        以下はあなたが利用可能な材料のリストです：
+        {", ".join(ingredients)}
+        """
+  
+
 class PostIngredientsView(APIView):
     permission_classes = [IsAuthenticated]
 
