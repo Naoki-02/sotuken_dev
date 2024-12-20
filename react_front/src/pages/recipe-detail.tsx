@@ -24,8 +24,13 @@ interface RecipeDetailProps {
 export default function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
   const handleCook = async() => {
     try{
-      const response = await axios.post("",{
-        data: recipe.ingredients
+      const names = recipe.ingredients
+      const token=localStorage.getItem('token')
+      const response = await axios.delete("http://localhost:8000/service/cook/",{
+        data:{names:names},
+        headers:{
+          'Authorization': token ? `Token ${token}` : '',
+        }
       })
       console.log('調理開始:', response.data);
     } catch (error) {

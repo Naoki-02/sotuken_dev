@@ -229,7 +229,7 @@ class DeleteIngredients(APIView):
             logger.error('エラーが発生しました', exc_info=True)
             return JsonResponse({'error': '内部サーバーエラーが発生しました'}, status=500)
         
-class DeleteUseIngredient(APIView):
+class DeleteUseIngredients(APIView):
     permission_classes = [IsAuthenticated]
     def delete(self, request):
         try:
@@ -243,11 +243,11 @@ class DeleteUseIngredient(APIView):
                 else:
                     not_found_items.append(name)
                     
-            resopnse = {'message': '材料が正常に削除されました！'}
+            response = {'message': '材料が正常に削除されました！'}
             if not_found_items:
-                resopnse['not_found_items'] = not_found_items
+                response['not_found_items'] = not_found_items
                 
-            return JsonResponse(resopnse, status=200)
+            return JsonResponse(response, status=200)
         
         except Exception as e:
             logger.error('エラーが発生しました', exc_info=True)
