@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from "@/components/ui/separator"
 import { PopupDialog } from "@/services/PopupDialog"
 import axios from 'axios'
-import { ArrowLeft, ChefHat, Clock, Utensils } from 'lucide-react'
+import { ArrowLeft, CheckCircle, ChefHat, Clock, Utensils } from 'lucide-react'
+import { useState } from "react"
 
 interface RecipeDetailProps {
   recipe: {
@@ -22,6 +23,7 @@ interface RecipeDetailProps {
 
 
 export default function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
+  const [isCooking, setIsCooking] = useState(false);
   const handleCook = async() => {
     try{
       const names = recipe.ingredients
@@ -33,6 +35,7 @@ export default function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
         }
       })
       console.log('調理開始:', response.data);
+      setIsCooking(true);
     } catch (error) {
       console.error('調理開始エラー:', error);
     }
@@ -100,6 +103,12 @@ export default function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
           </div>
         </CardContent>
         <CardFooter className="flex justify-center pt-6">
+        {isCooking ? (
+            <div className="flex items-center text-green-600">
+              <CheckCircle className="mr-2 h-5 w-5" />
+              <span className="text-lg font-semibold">調理開始済み</span>
+            </div>
+          ) : (
           <PopupDialog
             trigger={
               <Button size="lg" className="w-full sm:w-auto">
@@ -118,6 +127,7 @@ export default function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
               <li>調理履歴に記録されます</li>
             </ul>
           </PopupDialog>
+          )}
         </CardFooter>
       </Card>
     </div>
