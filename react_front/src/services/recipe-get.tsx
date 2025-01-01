@@ -14,24 +14,33 @@ export default function RecipePage() {
 
   useEffect(() => {
     const fetchRecipes = async () => {
+      const localrecipes = localStorage.getItem('recipes')
       setLoading(true)
       setError(null)
-      try {
-        const token = localStorage.getItem('token')
-        const response = await axios.get('http://localhost:8000/service/get_recipes/', {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-      })
-        console.log(response.data.recipes)
-        setRecipes(response.data.recipes)
-      } catch (err) {
-        setError('レシピデータの取得に失敗しました。')
-      } finally {
+      if (localrecipes && localrecipes.length > 0) {
+        setRecipes(JSON.parse(localrecipes))
+        console.log('ローカルストレージから取得しました。')
+        // console.log(localrecipes)
         setLoading(false)
+      } else {
+        try {
+          const token = localStorage.getItem('token')
+          const response = await axios.get('http://localhost:8000/service/get_recipes/', {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          })
+          console.log(response.data.recipes)
+          localStorage.setItem('recipes', JSON.stringify(response.data.recipes))
+          console.log("ローカルストレージに保存しました。")
+          setRecipes(response.data.recipes)
+        } catch (err) {
+          setError('レシピデータの取得に失敗しました。')
+        } finally {
+          setLoading(false)
+        }
       }
     }
-
     fetchRecipes()
   }, [])
 

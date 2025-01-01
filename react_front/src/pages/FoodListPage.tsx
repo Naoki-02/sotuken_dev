@@ -54,10 +54,10 @@ export default function FoodListScreen() {
     useEffect(() => {
         const fetchFoodItems = async () => {
             const localData = localStorage.getItem("ingredients");
-            if (Array.isArray(localData) && localData.length > 0) {
+            if (localData && localData.length > 0) {
                 console.log("ローカルストレージからデータを取得しました。");
                 setFoodItems(JSON.parse(localData));
-                console.log("localData:" + localData);
+                // console.log("localData:" + localData);
             } else {
                 console.log("サーバから食品データを取得します。");
                 try {
@@ -68,7 +68,7 @@ export default function FoodListScreen() {
                         },
                     })
                     console.log("食品データをサーバから取得しました。");
-                    console.log(response.data);
+                    // console.log(response.data);
 
                     //ローカルストレージにデータを保存
                     localStorage.setItem("ingredients", JSON.stringify(response.data));
@@ -92,16 +92,18 @@ export default function FoodListScreen() {
 
     const handleDelete = async (id: number) => {
         try {
-            const ingredients = JSON.parse(localStorage.getItem("ingredients") || '[]');
-            const updatedIngredients = ingredients.filter((item: Ingredient) => item.id !== id);
-            localStorage.setItem("ingredients", JSON.stringify(updatedIngredients));
-            setFoodItems(foodItems.filter(item => item.id !== id));
             const token = localStorage.getItem('token'); // 認証トークンの取得
             await axios.delete(`http://localhost:8000/service/delete_ingredients/${id}/`, {
                 headers: {
                     Authorization: `Token ${token}`, // トークンをヘッダーに設定
                 },
             });
+            // ローカルストレージからデータを削除
+            const ingredients = JSON.parse(localStorage.getItem("ingredients") || '[]');
+            const updatedIngredients = ingredients.filter((item: Ingredient) => item.id !== id);
+            localStorage.setItem("ingredients", JSON.stringify(updatedIngredients));
+            // データを更新
+            setFoodItems(foodItems.filter(item => item.id !== id));
         } catch (error) {
             console.error("削除に失敗しました:", error);
         }

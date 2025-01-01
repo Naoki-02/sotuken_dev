@@ -154,13 +154,14 @@ class RecipeSuggestionView(APIView):
             )
 
             # APIのレスポンスを解析
-            recipes_data=json.loads(response.choices[0].message.content)
+            recipes_jsondata=json.loads(response.choices[0].message.content)
+            # recipes_data=response.choices[0].message.content
             # レスポンス内容をテキストファイルに保存
             file_path = os.path.join(settings.BASE_DIR, "debug_response.txt")
             with open(file_path, "w", encoding="utf-8") as file:
-                file.write(recipes_data)
+                file.write(response.choices[0].message.content)
                 
-            for recipe_data in recipes_data:
+            for recipe_data in recipes_jsondata:
                 recipe=Recipe(
                     user=request.user,
                     name=recipe_data["name"],
@@ -179,7 +180,7 @@ class RecipeSuggestionView(APIView):
                 for step_number,instruction_text in enumerate(recipe_data["instructions"],start=1):
                     Instruction.objects.create(recipe=recipe,step_number=step_number,description=instruction_text)
                     
-            return JsonResponse({"recipes": json.loads(recipes_data)}, status=200)
+            return JsonResponse({"recipes": recipes_jsondata}, status=200)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
