@@ -49,26 +49,36 @@ export default function FoodListScreen() {
     const [searchTerm, setSearchTerm] = useState('')
     const [editingItem, setEditingItem] = useState<Ingredient | null>(null)
     const [selectedCategory, setSelectedCategory] = useState<string>('all')
-    const [itemToDelete, setItemToDelete] = useState<Ingredient | null>(null)
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false) // ダイアログの開閉状態を管理
-
     // サーバーからデータを取得するGETリクエスト
     useEffect(() => {
         const fetchFoodItems = async () => {
-            try {
-                const token = localStorage.getItem('token') // 認証トークンの取得
-                const response = await axios.get<Ingredient[]>('http://localhost:8000/service/get_ingredients/', {
-                    headers: {
-                        Authorization: `Token ${token}`, // トークンをヘッダーに設定
-                    },
-                })
-                console.log("食品データの取得に成功しました:")
-                console.log(response.data)
+            const localData = localStorage.getItem("ingredients");
+            if (Array.isArray(localData) && localData.length > 0) {
+                console.log("ローカルストレージからデータを取得しました。");
+                setFoodItems(JSON.parse(localData));
+                console.log("localData:" + localData);
+            } else {
+                console.log("サーバから食品データを取得します。");
+                try {
+                    const token = localStorage.getItem('token') // 認証トークンの取得
+                    const response = await axios.get<Ingredient[]>('http://localhost:8000/service/get_ingredients/', {
+                        headers: {
+                            Authorization: `Token ${token}`, // トークンをヘッダーに設定
+                        },
+                    })
+                    console.log("食品データをサーバから取得しました。");
+                    console.log(response.data);
 
-                setFoodItems(response.data);
+                    //ローカルストレージにデータを保存
+                    localStorage.setItem("ingredients", JSON.stringify(response.data));
+                    console.log("ローカルストレージにデータを保存しました。");
 
-            } catch (error) {
-                console.error("食品データの取得に失敗しました:", error)
+                    setFoodItems(response.data);
+
+                } catch (error) {
+                    console.error("食品データの取得に失敗しました:", error)
+                }
             }
         }
 
@@ -82,13 +92,16 @@ export default function FoodListScreen() {
 
     const handleDelete = async (id: number) => {
         try {
+            const ingredients = JSON.parse(localStorage.getItem("ingredients") || '[]');
+            const updatedIngredients = ingredients.filter((item: Ingredient) => item.id !== id);
+            localStorage.setItem("ingredients", JSON.stringify(updatedIngredients));
+            setFoodItems(foodItems.filter(item => item.id !== id));
             const token = localStorage.getItem('token'); // 認証トークンの取得
             await axios.delete(`http://localhost:8000/service/delete_ingredients/${id}/`, {
                 headers: {
                     Authorization: `Token ${token}`, // トークンをヘッダーに設定
                 },
             });
-            setFoodItems(foodItems.filter(item => item.id !== id));
         } catch (error) {
             console.error("削除に失敗しました:", error);
         }
@@ -179,7 +192,7 @@ export default function FoodListScreen() {
                                             </Dialog>
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
-                                                    <Button variant="outline" size="icon" onClick={() => setItemToDelete(item)}>
+                                                    <Button variant="outline" size="icon">
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </AlertDialogTrigger>

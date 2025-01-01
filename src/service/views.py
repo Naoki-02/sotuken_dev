@@ -16,7 +16,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Ingredients
+from .models import Ingredient, Ingredients, Instruction, Recipe
 from .serializers import IngredientSerializer
 
 logger = logging.getLogger('myapp')
@@ -118,7 +118,6 @@ class RecipeSuggestionView(APIView):
             ユーザからの材料リストを基に作れる料理を提案してください。以下のフォーマットで結果を返してください：
             [
             {
-                "id": 数字,
                 "name": "料理名",
                 "ingredients": ["必要な材料1", "必要な材料2", ...],
                 "description": "料理の簡単な説明",
@@ -155,15 +154,32 @@ class RecipeSuggestionView(APIView):
             )
 
             # APIのレスポンスを解析
-            recipe_suggestions = response.choices[0].message.content
+            recipes_data=json.loads(response.choices[0].message.content)
             # レスポンス内容をテキストファイルに保存
             file_path = os.path.join(settings.BASE_DIR, "debug_response.txt")
             with open(file_path, "w", encoding="utf-8") as file:
-                file.write(recipe_suggestions)
-
-
-            return JsonResponse({"recipes": json.loads(recipe_suggestions)}, status=200)
-
+                file.write(recipes_data)
+                
+            for recipe_data in recipes_data:
+                recipe=Recipe(
+                    user=request.user,
+                    name=recipe_data["name"],
+                    description=recipe_data["description"],
+                    cooking_time=recipe_data["cookingTime"],
+                    difficulty=recipe_data["difficulty"]
+                )
+                #Recipeモデルを保存
+                recipe.save()
+                
+                #ingredientモデルを保存
+                for ingredient_name in recipe_data["ingredients"]:
+                    Ingredient.objects.create(recipe=recipe,name=ingredient_name)
+                
+                #Instructionモデルを保存
+                for step_number,instruction_text in enumerate(recipe_data["instructions"],start=1):
+                    Instruction.objects.create(recipe=recipe,step_number=step_number,description=instruction_text)
+                    
+            return JsonResponse({"recipes": json.loads(recipes_data)}, status=200)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
