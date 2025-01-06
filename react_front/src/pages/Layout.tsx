@@ -1,6 +1,7 @@
 import { useAuth } from '@/services/AuthContext'
 import { MobileNav } from '@/services/mobile-nav'
 import { SuggestionButton } from '@/services/suggestion-button'
+import { SuggestionSpan } from '@/services/suggestion-span'
 import { Facebook, Instagram, Menu, Twitter, X } from 'lucide-react'
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -31,7 +32,7 @@ export default function Layout({ children }: LayoutProps) {
                             <Link to="/camera" className="text-gray-600 hover:text-gray-900">レシート読み取り</Link>
                             <Link to="/multi-ingredient-form" className="text-gray-600 hover:text-gray-900">食材手動追加</Link>
                             <Link to="/Survey" className="text-gray-600 hover:text-gray-900">アンケート</Link>
-                            <Link to="/recipe-suggestion" className="text-gray-600 hover:text-gray-900">料理提案</Link>
+                            <SuggestionSpan />
                             {!isAuthenticated && (
                                 <Link to="/auth" className="text-gray-600 hover:text-gray-900">ログイン</Link>
                             )}
