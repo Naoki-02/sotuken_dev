@@ -44,7 +44,7 @@ export default function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
       console.log("ローカルストレージを更新しました。");
 
       const response = await axios.delete("http://localhost:80/service/cook/",{
-        data:{names:names},
+        data:{recipe_id:recipe.id,names:names},
         headers:{
           'Authorization': token ? `Token ${token}` : '',
         }

@@ -16,8 +16,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Ingredient, Ingredients, Instruction, Recipe
-from .serializers import IngredientSerializer
+from .models import CookHistory, Ingredient, Ingredients, Instruction, Recipe
+from .serializers import IngredientSerializer, RecipeSerializer
 
 logger = logging.getLogger('myapp')
 
@@ -106,8 +106,8 @@ class RecipeSuggestionView(APIView):
             # 現在ログインしているユーザーの材料を取得
             ingredients = Ingredients.objects.filter(user=request.user)
             ingredient_names = [ingredient.name for ingredient in ingredients]
+            saved_recipe=[]
             
-
             if not ingredient_names:
                 return JsonResponse({"error": "No ingredients found for the user."}, status=400)
 
@@ -179,8 +179,13 @@ class RecipeSuggestionView(APIView):
                 #Instructionモデルを保存
                 for step_number,instruction_text in enumerate(recipe_data["instructions"],start=1):
                     Instruction.objects.create(recipe=recipe,step_number=step_number,description=instruction_text)
-                    
-            return JsonResponse({"recipes": recipes_jsondata}, status=200)
+                
+                #保存したレシピをリストに追加
+                saved_recipe.append(recipe)
+            
+            # 保存したすべてのレシピをシリアライズ
+            serializer=RecipeSerializer(saved_recipe,many=True)
+            return JsonResponse({"recipes": serializer.data}, status=200)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
@@ -250,11 +255,22 @@ class DeleteUseIngredients(APIView):
     permission_classes = [IsAuthenticated]
     def delete(self, request):
         try:
-            names = request.data.get("names", [])  # 複数の食材名をリストとして取得
+            recipe_id=request.data.get("recipe_id")
+            names=request.data.get("names",[])  # 複数の食材名をリストとして取得
             not_found_items=[]
             
+            try:
+                recipe=Recipe.objects.get(id=recipe_id)
+            except Recipe.DoesNotExist:
+                return JsonResponse({'error': 'レシピが見つかりません'}, status=404)
+                
+            CookHistory.objects.create(
+                user=request.user,
+                recipe=recipe,
+            )
+            
             for name in names:
-                ingredient = Ingredients.objects.filter(user=request.user, name=name).first()
+                ingredient = Ingredients.objects.filter(user=request.user, name__icontains=name).first()
                 if ingredient:
                     ingredient.delete()
                 else:
