@@ -2,16 +2,20 @@ services:
   nginx:
     image: nginx:1.25.5
     ports:
-      - "8000:8000"
+      - "80:8000"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/uwsgi_params:/etc/nginx/uwsgi_params
       - ./static:/static
     depends_on:
       - django
+    networks:
+      - backend
 
   mariadb:
     image: mariadb:11.3.2
+    container_name: mariadb
+    restart: always
     ports:
       - "3306:3306"
     env_file:
@@ -19,9 +23,12 @@ services:
     volumes:
       - ./mariadb:/var/lib/mysql
       - ./sql:/docker-entrypoint-initdb.d
+    networks:
+      - backend
 
   django:
     build: ./django
+    container_name: django
     command: uwsgi --socket :8001 --module app.wsgi --py-autoreload 1 --logto /tmp/mylog.log
     volumes:
       - ./src:/code
@@ -32,3 +39,7 @@ services:
       - ./django/.env
     depends_on:
       - mariadb
+    networks:
+      - backend
+networks:
+  backend:

@@ -34,7 +34,7 @@ export default function AuthForm() {
         try {
             if (activeTab === "login") {
                 // ログイン用のAPIリクエスト
-                const response = await axios.post('http://localhost:8000/api/auth/login/', {
+                const response = await axios.post('http://localhost:80/api/auth/login/', {
                     username: formData.name,
                     password: formData.password1
                 });
@@ -47,7 +47,7 @@ export default function AuthForm() {
                 navigate('/');  // リダイレクト
             } else {
                 // サインアップ用のAPIリクエスト
-                const response = await axios.post('http://localhost:8000/api/auth/registration/', {
+                const response = await axios.post('http://localhost:80/api/auth/registration/', {
                     username: formData.name,
                     email: formData.email,
                     password1: formData.password1,

@@ -47,7 +47,7 @@ export default function MultiIngredientForm() {
         const token = localStorage.getItem('token');
 
         try {
-            const response = await postRequest('http://localhost:8000/service/post_ingredients/', data, token);
+            const response = await postRequest('http://localhost:80/service/post_ingredients/', data, token);
             console.log('Success:', response);
         } catch (error) {
             console.error('Error:', error);

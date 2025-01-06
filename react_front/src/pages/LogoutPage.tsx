@@ -14,7 +14,7 @@ const Logout: React.FC = () => {
                 // console.log('Token found:', token);
                 try {
                     // ログアウトAPIへのリクエスト
-                    await axios.post('http://localhost:8000/api/auth/logout/', null, {
+                    await axios.post('http://localhost:80/api/auth/logout/', null, {
                         headers: {
                             Authorization: `${token}`,
                             // CSRFトークンが必要な場合に追加

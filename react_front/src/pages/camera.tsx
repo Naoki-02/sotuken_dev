@@ -4,11 +4,20 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { saveToLocalStorage } from '@/services/SaveLocalStorage'
 import axios from 'axios'
 import { Camera, ImageIcon, RotateCcw, Upload } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ReceiptSubmissionCompletePage from './CameraSuccessPage'
+
+interface Ingredient {
+    id: number
+    name: string
+    quantity: string
+    expirationDate: string
+    category: string
+}
 
 export default function ReceiptCaptureScreen() {
     const [capturedImage, setCapturedImage] = useState<string | null>(null)
@@ -110,7 +119,7 @@ export default function ReceiptCaptureScreen() {
                 formData.append('image', blob, 'receipt.jpg')
 
                 // POSTリクエストでアップロード
-                const response = await axios.post('http://localhost:8000/service/ocr/', formData, {
+                const response = await axios.post('http://localhost:80/service/ocr/', formData, {
                     headers: {
                         'Authorization': `Token ${token}`,
                         'Content-Type': 'multipart/form-data',
@@ -119,9 +128,26 @@ export default function ReceiptCaptureScreen() {
 
                 console.log('Upload successful:', response.data)
 
+                await axios.get<Ingredient[]>('http://localhost:80/service/get_ingredients/', {
+                    headers: {
+                        Authorization: `Token ${token}`, // トークンをヘッダーに設定
+                    },
+                }).then((response) => {
+                    console.log("食品データをサーバから取得しました。");
+                    //ローカルストレージにデータを保存
+                    saveToLocalStorage("ingredients", response.data)
+                })
+
                 // 送信完了画面に遷移
                 setIsSubmissionComplete(true)
 
+                await axios.get('http://localhost:80/service/get_recipes/', {
+                    headers: {
+                        Authorization: `Token ${token}`,
+                    },
+                }).then((response) => {
+                    saveToLocalStorage("recipes", response.data.recipes)
+                })
             } catch (err) {
                 console.error('Error uploading image:', err)
             }

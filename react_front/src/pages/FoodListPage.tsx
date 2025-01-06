@@ -54,21 +54,23 @@ export default function FoodListScreen() {
     useEffect(() => {
         const fetchFoodItems = async () => {
             const localData = localStorage.getItem("ingredients");
-            if (localData && localData.length > 0) {
+            const parsedData = JSON.parse(localData || '[]');
+            if (parsedData && parsedData.length > 0) {
                 console.log("ローカルストレージからデータを取得しました。");
-                setFoodItems(JSON.parse(localData));
-                // console.log("localData:" + localData);
+                setFoodItems(parsedData);
+                // console.log("localDataの型：", typeof parsedData);
+                // console.log("localDataの中身：", parsedData);
             } else {
                 console.log("サーバから食品データを取得します。");
                 try {
                     const token = localStorage.getItem('token') // 認証トークンの取得
-                    const response = await axios.get<Ingredient[]>('http://localhost:8000/service/get_ingredients/', {
+                    const response = await axios.get<Ingredient[]>('http://localhost:80/service/get_ingredients/', {
                         headers: {
                             Authorization: `Token ${token}`, // トークンをヘッダーに設定
                         },
                     })
                     console.log("食品データをサーバから取得しました。");
-                    // console.log(response.data);
+                    console.log(response.data);
 
                     //ローカルストレージにデータを保存
                     localStorage.setItem("ingredients", JSON.stringify(response.data));
@@ -93,7 +95,7 @@ export default function FoodListScreen() {
     const handleDelete = async (id: number) => {
         try {
             const token = localStorage.getItem('token'); // 認証トークンの取得
-            await axios.delete(`http://localhost:8000/service/delete_ingredients/${id}/`, {
+            await axios.delete(`http://localhost:80/service/delete_ingredients/${id}/`, {
                 headers: {
                     Authorization: `Token ${token}`, // トークンをヘッダーに設定
                 },
@@ -104,6 +106,7 @@ export default function FoodListScreen() {
             localStorage.setItem("ingredients", JSON.stringify(updatedIngredients));
             // データを更新
             setFoodItems(foodItems.filter(item => item.id !== id));
+            console.log("削除しました。");
         } catch (error) {
             console.error("削除に失敗しました:", error);
         }
@@ -117,7 +120,7 @@ export default function FoodListScreen() {
     const handleSave = async (updatedItem: Ingredient) => {
         try {
             const token = localStorage.getItem('token'); // 認証トークンの取得
-            await axios.put(`http://localhost:8000/service/update_ingredients/${updatedItem.id}/`, updatedItem, {
+            await axios.put(`http://localhost:80/service/update_ingredients/${updatedItem.id}/`, updatedItem, {
                 headers: {
                     Authorization: `Token ${token}`, // トークンをヘッダーに設定
                 },

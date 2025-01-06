@@ -7,16 +7,17 @@ import axios from 'axios'
 import { ArrowLeft, CheckCircle, ChefHat, Clock, Utensils } from 'lucide-react'
 import { useState } from "react"
 
+interface Recipe{
+  id: number
+  name: string
+  description: string
+  ingredients: string[]
+  instructions: string[]
+  cookingTime: string
+  difficulty: string
+}
 interface RecipeDetailProps {
-  recipe: {
-    id: number
-    name: string
-    description: string
-    ingredients: string[]
-    instructions: string[]
-    cookingTime: string
-    difficulty: string
-  }
+  recipe: Recipe
   onBack: () => void
 }
 
@@ -28,12 +29,35 @@ export default function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
     try{
       const names = recipe.ingredients
       const token=localStorage.getItem('token')
-      const response = await axios.delete("http://localhost:8000/service/cook/",{
+      const storedRecipes = localStorage.getItem('recipes');
+      const recipes = storedRecipes ? JSON.parse(storedRecipes) : [];
+      // 削除したい ingredients に含まれる名前を持つ recipe を除外
+      const updatedRecipes = recipes.filter((recipe:Recipe) => {
+        // recipe の ingredients に削除対象の名前が含まれているか確認
+        const hasIngredientToRemove = recipe.ingredients.some((ingredient) =>
+          names.includes(ingredient)
+        );
+        // 削除対象の名前が含まれている場合は false を返す
+        return !hasIngredientToRemove;
+      });
+      localStorage.setItem('recipes', JSON.stringify(updatedRecipes));
+      console.log("ローカルストレージを更新しました。");
+
+      const response = await axios.delete("http://localhost:80/service/cook/",{
         data:{names:names},
         headers:{
           'Authorization': token ? `Token ${token}` : '',
         }
       })
+      const localingredients = localStorage.getItem('ingredients');
+      const ingredients = localingredients ? JSON.parse(localingredients) : [];
+
+      //削除する材料に一致するものを除外
+      const updatedIngredients=ingredients.filter(
+        (ingredients: { name: string; }) => !names.includes(ingredients.name)
+      )
+      localStorage.setItem('ingredients', JSON.stringify(updatedIngredients));
+      console.log('材料を削除しました:', names);
       console.log('調理開始:', response.data);
       setIsCooking(true);
     } catch (error) {

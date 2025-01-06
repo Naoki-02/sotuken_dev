@@ -20,7 +20,18 @@ export default function ReceiptSubmissionCompletePage({
   const [progress, setProgress] = useState(0)
 
   useEffect(() => {
-    const timer = setTimeout(() => setProgress(100), 500)
+    const timer = setTimeout(() => {
+      let currentProgress = 0
+      const interval = setInterval(() => {
+        if (currentProgress < 100) {
+          currentProgress += 100 / 16 // 15秒間で100%まで進行
+          if (currentProgress > 100) currentProgress = 100 // 100%を超えないようにする
+          setProgress(currentProgress)
+        } else {
+          clearInterval(interval)
+        }
+      }, 1000)
+    }, 500)
     return () => clearTimeout(timer)
   }, [])
 
@@ -36,6 +47,9 @@ export default function ReceiptSubmissionCompletePage({
           </div>
           <p className="text-center text-lg font-medium">
             レシートの処理が完了しました
+          </p>
+          <p className="text-center text-lg font-medium">
+            追加された材料から<br />新たな料理を考えています。
           </p>
           <Progress value={progress} className="w-full" />
           <p className="text-center text-sm text-muted-foreground">
