@@ -16,8 +16,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Ingredients
-from .serializers import IngredientSerializer
+from .models import CookHistory, Ingredient, Ingredients, Instruction, Recipe
+from .serializers import (CookHistorySerializer, IngredientSerializer,
+                          RecipeSerializer)
 
 logger = logging.getLogger('myapp')
 
@@ -106,8 +107,8 @@ class RecipeSuggestionView(APIView):
             # 現在ログインしているユーザーの材料を取得
             ingredients = Ingredients.objects.filter(user=request.user)
             ingredient_names = [ingredient.name for ingredient in ingredients]
+            saved_recipe=[]
             
-
             if not ingredient_names:
                 return JsonResponse({"error": "No ingredients found for the user."}, status=400)
 
@@ -118,7 +119,6 @@ class RecipeSuggestionView(APIView):
             ユーザからの材料リストを基に作れる料理を提案してください。以下のフォーマットで結果を返してください：
             [
             {
-                "id": 数字,
                 "name": "料理名",
                 "ingredients": ["必要な材料1", "必要な材料2", ...],
                 "description": "料理の簡単な説明",
@@ -155,15 +155,38 @@ class RecipeSuggestionView(APIView):
             )
 
             # APIのレスポンスを解析
-            recipe_suggestions = response.choices[0].message.content
+            recipes_jsondata=json.loads(response.choices[0].message.content)
+            # recipes_data=response.choices[0].message.content
             # レスポンス内容をテキストファイルに保存
             file_path = os.path.join(settings.BASE_DIR, "debug_response.txt")
             with open(file_path, "w", encoding="utf-8") as file:
-                file.write(recipe_suggestions)
-
-
-            return JsonResponse({"recipes": json.loads(recipe_suggestions)}, status=200)
-
+                file.write(response.choices[0].message.content)
+                
+            for recipe_data in recipes_jsondata:
+                recipe=Recipe(
+                    user=request.user,
+                    name=recipe_data["name"],
+                    description=recipe_data["description"],
+                    cooking_time=recipe_data["cookingTime"],
+                    difficulty=recipe_data["difficulty"]
+                )
+                #Recipeモデルを保存
+                recipe.save()
+                
+                #ingredientモデルを保存
+                for ingredient_name in recipe_data["ingredients"]:
+                    Ingredient.objects.create(recipe=recipe,name=ingredient_name)
+                
+                #Instructionモデルを保存
+                for step_number,instruction_text in enumerate(recipe_data["instructions"],start=1):
+                    Instruction.objects.create(recipe=recipe,step_number=step_number,description=instruction_text)
+                
+                #保存したレシピをリストに追加
+                saved_recipe.append(recipe)
+            
+            # 保存したすべてのレシピをシリアライズ
+            serializer=RecipeSerializer(saved_recipe,many=True)
+            return JsonResponse({"recipes": serializer.data}, status=200)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
@@ -233,11 +256,22 @@ class DeleteUseIngredients(APIView):
     permission_classes = [IsAuthenticated]
     def delete(self, request):
         try:
-            names = request.data.get("names", [])  # 複数の食材名をリストとして取得
+            recipe_id=request.data.get("recipe_id")
+            names=request.data.get("names",[])  # 複数の食材名をリストとして取得
             not_found_items=[]
             
+            try:
+                recipe=Recipe.objects.get(id=recipe_id)
+            except Recipe.DoesNotExist:
+                return JsonResponse({'error': 'レシピが見つかりません'}, status=404)
+                
+            CookHistory.objects.create(
+                user=request.user,
+                recipe=recipe,
+            )
+            
             for name in names:
-                ingredient = Ingredients.objects.filter(user=request.user, name=name).first()
+                ingredient = Ingredients.objects.filter(user=request.user, name__icontains=name).first()
                 if ingredient:
                     ingredient.delete()
                 else:
@@ -375,3 +409,17 @@ class OCRView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class CookHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self,request):
+        try:
+            # ユーザーの調理履歴を取得
+            history = CookHistory.objects.filter(user=request.user)
+            
+            # シリアライザーを使用してデータをシリアライズ
+            serializer =CookHistorySerializer(history, many=True)
+            
+            return JsonResponse({'history': serializer.data}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)

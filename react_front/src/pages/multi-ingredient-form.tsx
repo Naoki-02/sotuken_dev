@@ -5,10 +5,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PlusCircle, Trash2 } from "lucide-react"
+import axios from 'axios'
+import { PlusCircle, Trash2, Utensils } from 'lucide-react'
 import { useState } from "react"
 import { postRequest } from "../services/postRequest"
-// import { getCsrfToken } from "../services/csrf"
 
 interface Ingredient {
     id: number;
@@ -17,10 +17,22 @@ interface Ingredient {
     category: string;
 }
 
+const categories = [
+    { value: "vegetable", label: "野菜" },
+    { value: "fruit", label: "果物" },
+    { value: "meat", label: "肉" },
+    { value: "fish", label: "魚" },
+    { value: "dairy", label: "乳製品" },
+    { value: "grain", label: "穀物" },
+    { value: "spice", label: "調味料" },
+    { value: "other", label: "その他" },
+];
+
 export default function MultiIngredientForm() {
     const [ingredients, setIngredients] = useState<Ingredient[]>([
         { id: 1, name: "", quantity: "", category: "" }
     ])
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     const addIngredient = () => {
         const newId = ingredients.length > 0 ? Math.max(...ingredients.map(i => i.id)) + 1 : 1
@@ -39,101 +51,148 @@ export default function MultiIngredientForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        // 食材追加のロジック
-        // 送信するデータをJSON形式にまとめる
-        const data = {
-            ingredients: ingredients.map(({ id, ...rest }) => ({ ...rest }))
-        }
-        const token = localStorage.getItem('token');
-
+        setIsSubmitting(true)
+        
         try {
-            const response = await postRequest('http://localhost:8000/service/post_ingredients/', data, token);
-            console.log('Success:', response);
+            const data = {
+                ingredients: ingredients.map(({ id, ...rest }) => ({ ...rest }))
+            }
+            const token = localStorage.getItem('token');
+            await postRequest('http://localhost:80/service/post_ingredients/', data, token);
+            setIngredients([{ id: 1, name: "", quantity: "", category: "" }])
+
+            const response = await axios.get<Ingredient[]>('http://localhost:80/service/get_ingredients/', {
+                headers: {
+                    Authorization: `Token ${token}`,
+                },
+            })
+            localStorage.setItem("ingredients", JSON.stringify(response.data));
         } catch (error) {
             console.error('Error:', error);
+        } finally {
+            setIsSubmitting(false)
         }
-
-        // console.log("送信データ:", JSON.stringify(data))
-        // // console.log("送信データ:", JSON.stringify(ingredients, null, 2))
-        // console.log(data)
-        // console.log(ingredients)
-        // フォームをリセット
-        setIngredients([{ id: 1, name: "", quantity: "", category: "" }])
     }
 
     return (
-        <Card className="w-full max-w-2xl mx-auto">
-            <CardHeader>
-                <CardTitle>食材追加</CardTitle>
-                <CardDescription>食材情報を入力してください。</CardDescription>
-            </CardHeader>
-            <form onSubmit={handleSubmit}>
-                <CardContent className="space-y-4">
-                    {ingredients.map((ingredient, index) => (
-                        <div key={ingredient.id} className="flex flex-wrap gap-4 items-end border-b pb-4">
-                            <div className="flex-1 min-w-[200px] space-y-2">
-                                <Label htmlFor={`name-${ingredient.id}`}>食材名</Label>
-                                <Input
-                                    id={`name-${ingredient.id}`}
-                                    value={ingredient.name}
-                                    onChange={(e) => updateIngredient(ingredient.id, "name", e.target.value)}
-                                    placeholder="例：トマト"
-                                    required
-                                />
-                            </div>
-                            <div className="flex-1 min-w-[150px] space-y-2">
-                                <Label htmlFor={`quantity-${ingredient.id}`}>数量</Label>
-                                <Input
-                                    id={`quantity-${ingredient.id}`}
-                                    value={ingredient.quantity}
-                                    onChange={(e) => updateIngredient(ingredient.id, "quantity", e.target.value)}
-                                    placeholder="例：3個"
-                                    required
-                                />
-                            </div>
-                            <div className="flex-1 min-w-[150px] space-y-2">
-                                <Label htmlFor={`category-${ingredient.id}`}>カテゴリー</Label>
-                                <Select
-                                    value={ingredient.category}
-                                    onValueChange={(value) => updateIngredient(ingredient.id, "category", value)}
-                                    required
-                                >
-                                    <SelectTrigger id={`category-${ingredient.id}`}>
-                                        <SelectValue placeholder="選択" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="vegetable">野菜</SelectItem>
-                                        <SelectItem value="fruit">果物</SelectItem>
-                                        <SelectItem value="meat">肉</SelectItem>
-                                        <SelectItem value="fish">魚</SelectItem>
-                                        <SelectItem value="dairy">乳製品</SelectItem>
-                                        <SelectItem value="grain">穀物</SelectItem>
-                                        <SelectItem value="spice">調味料</SelectItem>
-                                        <SelectItem value="other">その他</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            {ingredients.length > 1 && (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() => removeIngredient(ingredient.id)}
-                                    aria-label="食材を削除"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            )}
+        <div className="container mx-auto p-4">
+            <Card className="w-full max-w-2xl mx-auto bg-orange-50/50 border-orange-100">
+                <CardHeader className="border-b border-orange-100">
+                    <div className="flex items-center gap-2">
+                        <Utensils className="h-6 w-6 text-orange-600" />
+                        <div>
+                            <CardTitle className="text-orange-800">食材追加</CardTitle>
+                            <CardDescription className="text-orange-600">
+                                食材情報を入力してください
+                            </CardDescription>
                         </div>
-                    ))}
-                    <Button type="button" variant="outline" onClick={addIngredient} className="w-full">
-                        <PlusCircle className="mr-2 h-4 w-4" /> 食材を追加
-                    </Button>
-                </CardContent>
-                <CardFooter>
-                    <Button type="submit" className="w-full">食材を保存</Button>
-                </CardFooter>
-            </form>
-        </Card>
+                    </div>
+                </CardHeader>
+                <form onSubmit={handleSubmit}>
+                    <CardContent className="space-y-6 p-6">
+                        {ingredients.map((ingredient, index) => (
+                            <div 
+                                key={ingredient.id} 
+                                className="flex flex-wrap gap-4 items-end p-4 rounded-lg bg-white border border-orange-100 shadow-sm"
+                            >
+                                <div className="flex-1 min-w-[200px] space-y-2">
+                                    <Label 
+                                        htmlFor={`name-${ingredient.id}`}
+                                        className="text-orange-800"
+                                    >
+                                        食材名
+                                    </Label>
+                                    <Input
+                                        id={`name-${ingredient.id}`}
+                                        value={ingredient.name}
+                                        onChange={(e) => updateIngredient(ingredient.id, "name", e.target.value)}
+                                        placeholder="例：トマト"
+                                        className="border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                                        required
+                                    />
+                                </div>
+                                <div className="flex-1 min-w-[150px] space-y-2">
+                                    <Label 
+                                        htmlFor={`quantity-${ingredient.id}`}
+                                        className="text-orange-800"
+                                    >
+                                        数量
+                                    </Label>
+                                    <Input
+                                        id={`quantity-${ingredient.id}`}
+                                        value={ingredient.quantity}
+                                        onChange={(e) => updateIngredient(ingredient.id, "quantity", e.target.value)}
+                                        placeholder="例：3個"
+                                        className="border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                                        required
+                                    />
+                                </div>
+                                <div className="flex-1 min-w-[150px] space-y-2">
+                                    <Label 
+                                        htmlFor={`category-${ingredient.id}`}
+                                        className="text-orange-800"
+                                    >
+                                        カテゴリー
+                                    </Label>
+                                    <Select
+                                        value={ingredient.category}
+                                        onValueChange={(value) => updateIngredient(ingredient.id, "category", value)}
+                                        required
+                                    >
+                                        <SelectTrigger 
+                                            id={`category-${ingredient.id}`}
+                                            className="border-orange-200 focus:ring-orange-500"
+                                        >
+                                            <SelectValue placeholder="選択してください" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {categories.map((category) => (
+                                                <SelectItem 
+                                                    key={category.value} 
+                                                    value={category.value}
+                                                >
+                                                    {category.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                {ingredients.length > 1 && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => removeIngredient(ingredient.id)}
+                                        className="border-orange-200 hover:bg-orange-100 hover:text-orange-900"
+                                        aria-label="食材を削除"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                )}
+                            </div>
+                        ))}
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={addIngredient} 
+                            className="w-full border-orange-200 hover:bg-orange-100 text-orange-700 hover:text-orange-900"
+                        >
+                            <PlusCircle className="mr-2 h-4 w-4" /> 
+                            食材を追加
+                        </Button>
+                    </CardContent>
+                    <CardFooter className="p-6 pt-0">
+                        <Button 
+                            type="submit" 
+                            className="w-full bg-orange-600 hover:bg-orange-700"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? '保存中...' : '食材を保存'}
+                        </Button>
+                    </CardFooter>
+                </form>
+            </Card>
+        </div>
     )
 }
+
