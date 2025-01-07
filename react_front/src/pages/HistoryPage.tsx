@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import axios from 'axios'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import { Calendar, ChefHat, Clock, Filter, Search, Utensils } from 'lucide-react'
@@ -22,38 +23,57 @@ export default function CookingHistoryPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterMonth, setFilterMonth] = useState<string>('all')
-
+  
   useEffect(() => {
     // 実際のアプリケーションでは、ここでAPIからデータを取得します
     const fetchHistory = async () => {
-      // モックデータを使用
-      const mockHistory: CookingHistoryItem[] = [
-        {
-          id: '1',
-          recipeName: '鶏肉のトマト煮込み',
-          cookingDate: new Date(2024, 0, 15),
-          ingredients: ['鶏もも肉', 'トマト', 'たまねぎ', 'にんにく']
-        },
-        {
-          id: '2',
-          recipeName: '野菜たっぷりミネストローネ',
-          cookingDate: new Date(2024, 0, 10),
-          ingredients: ['キャベツ', 'にんじん', 'セロリ', 'トマト缶']
-        },
-        {
-          id: '3',
-          recipeName: 'サーモンのムニエル',
-          cookingDate: new Date(2023, 11, 28),
-          ingredients: ['サーモン', 'レモン', 'バター', 'パセリ']
-        },
-        // 他の履歴アイテムを追加...
-      ]
-
-      setHistory(mockHistory)
-      setIsLoading(false)
+      setIsLoading(true)
+      try{
+        const token = localStorage.getItem('token')
+        const response = await axios.get('http://localhost:80/service/get_cook_history/',{
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        })
+        console.log(response.data)
+        const fetchHistory = response.data.history.map((item: any) => ({
+          id: item.id,
+          recipeName: item.recipe.name,
+          cookingDate: new Date(item.cooked_at),
+          ingredients: item.recipe.ingredients,
+        }))
+        console.log(fetchHistory)
+        setHistory(fetchHistory)
+      } catch (error) {
+        console.error('エラー:', error)
+      }finally{
+        setIsLoading(false)
+      }
     }
-
     fetchHistory()
+
+      // // モックデータを使用
+      // const mockHistory: CookingHistoryItem[] = [
+      //   {
+      //     id: '1',
+      //     recipeName: '鶏肉のトマト煮込み',
+      //     cookingDate: new Date(2024, 0, 15),
+      //     ingredients: ['鶏もも肉', 'トマト', 'たまねぎ', 'にんにく']
+      //   },
+      //   {
+      //     id: '2',
+      //     recipeName: '野菜たっぷりミネストローネ',
+      //     cookingDate: new Date(2024, 0, 10),
+      //     ingredients: ['キャベツ', 'にんじん', 'セロリ', 'トマト缶']
+      //   },
+      //   {
+      //     id: '3',
+      //     recipeName: 'サーモンのムニエル',
+      //     cookingDate: new Date(2023, 11, 28),
+      //     ingredients: ['サーモン', 'レモン', 'バター', 'パセリ']
+      //   },
+      //   // 他の履歴アイテムを追加...
+      // ]
   }, [])
 
   const filteredHistory = history.filter(item => {

@@ -11,4 +11,5 @@ urlpatterns = [
     path('ocr/',views.OCRView.as_view(), name='ocr'),
     path('get_recipes/',views.RecipeSuggestionView.as_view(), name='get_recipes'),
     path('cook/',views.DeleteUseIngredients.as_view(), name='cook'),
+    path('get_cook_history/',views.CookHistoryView.as_view(), name='get_cook_history'),
 ]

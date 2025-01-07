@@ -17,7 +17,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import CookHistory, Ingredient, Ingredients, Instruction, Recipe
-from .serializers import IngredientSerializer, RecipeSerializer
+from .serializers import (CookHistorySerializer, IngredientSerializer,
+                          RecipeSerializer)
 
 logger = logging.getLogger('myapp')
 
@@ -408,3 +409,17 @@ class OCRView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class CookHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self,request):
+        try:
+            # ユーザーの調理履歴を取得
+            history = CookHistory.objects.filter(user=request.user)
+            
+            # シリアライザーを使用してデータをシリアライズ
+            serializer =CookHistorySerializer(history, many=True)
+            
+            return JsonResponse({'history': serializer.data}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
