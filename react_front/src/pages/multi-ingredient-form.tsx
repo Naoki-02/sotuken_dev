@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import axios from 'axios'
 import { PlusCircle, Trash2, Utensils } from 'lucide-react'
 import { useState } from "react"
 import { postRequest } from "../services/postRequest"
@@ -59,6 +60,13 @@ export default function MultiIngredientForm() {
             const token = localStorage.getItem('token');
             await postRequest('http://localhost:80/service/post_ingredients/', data, token);
             setIngredients([{ id: 1, name: "", quantity: "", category: "" }])
+
+            const response = await axios.get<Ingredient[]>('http://localhost:80/service/get_ingredients/', {
+                headers: {
+                    Authorization: `Token ${token}`,
+                },
+            })
+            localStorage.setItem("ingredients", JSON.stringify(response.data));
         } catch (error) {
             console.error('Error:', error);
         } finally {

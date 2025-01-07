@@ -2,7 +2,6 @@
 import { Outlet, Route, Routes } from 'react-router-dom';
 import './App.css';
 import AboutPage from './pages/AboutPage';
-import AddIngredientPage from './pages/AddIngredientPage';
 import AuthForm from './pages/authForm';
 import CameraApp from './pages/camera';
 import FoodListPage from './pages/FoodListPage';
@@ -26,7 +25,6 @@ function App() {
           <Route path="about" element={<AboutPage />} />
           {/* 保護されたルート */}
           <Route element={<ProtectedRoute />} >
-            <Route path="add-ingredient" element={<AddIngredientPage />} />
             <Route path="multi-ingredient-form" element={<MultiIngredientForm />} />
             <Route path="food-list" element={<FoodListPage />} />
             <Route path="survey" element={<SurveyPage />} />
