@@ -5,119 +5,229 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useToast } from "@/hooks/use-toast"
+import { cn } from "@/lib/utils"
 import axios from "axios"
+import { KeyRound, Loader2, Mail, User, UserPlus, UserRound } from 'lucide-react'
 import { ChangeEvent, FormEvent, useState } from "react"
-import { useNavigate } from "react-router-dom"; // useNavigateをインポート
-import { useAuth } from "../services/AuthContext"; // useAuthをインポート
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "../services/AuthContext"
+
+interface FormData {
+    name: string
+    email: string
+    password1: string
+    password2: string
+}
 
 export default function AuthForm() {
     const [activeTab, setActiveTab] = useState("login")
-    const [formData, setFormData] = useState({
+    const [isLoading, setIsLoading] = useState(false)
+    const [formData, setFormData] = useState<FormData>({
         name: '',
         email: '',
         password1: '',
         password2: '',
-    });
+    })
 
-    const { login } = useAuth();  // useAuthフックを使用
+    const { login } = useAuth()
+    const navigate = useNavigate()
+    const { toast } = useToast()
 
-    const navigate = useNavigate();
-
-    // フォームの入力値を管理
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.id]: e.target.value });
-    };
+        setFormData({ ...formData, [e.target.id]: e.target.value })
+    }
 
-    // フォームの送信処理
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
+        e.preventDefault()
+        setIsLoading(true)
+
         try {
             if (activeTab === "login") {
-                // ログイン用のAPIリクエスト
                 const response = await axios.post('http://localhost:80/api/auth/login/', {
                     username: formData.name,
                     password: formData.password1
-                });
-                // console.log(formData.name, formData.password1);
-                console.log(response.data);  // レスポンスの確認
-                console.log('login post request success');
-                // ログイン成功後の処理を追加（例：トークンの保存など）
-                // トークンをlocalStorageに保存する
-                login(response.data.key);
-                navigate('/');  // リダイレクト
+                })
+                login(response.data.key)
+                toast({
+                    title: "ログイン成功",
+                    description: "ようこそ！",
+                })
+                navigate('/')
             } else {
-                // サインアップ用のAPIリクエスト
-                const response = await axios.post('http://localhost:80/api/auth/registration/', {
+                if (formData.password1 !== formData.password2) {
+                    toast({
+                        variant: "destructive",
+                        title: "エラー",
+                        description: "パスワードが一致しません。",
+                    })
+                    return
+                }
+                
+                await axios.post('http://localhost:80/api/auth/registration/', {
                     username: formData.name,
                     email: formData.email,
                     password1: formData.password1,
                     password2: formData.password2,
-                });
-                console.log(response.data);  // レスポンスの確認
-                console.log('signup post request success');
-                // サインアップ成功後の処理を追加（例：ログインページにリダイレクトなど）
-                navigate('/auth');  // リダイレクト
+                })
+                toast({
+                    title: "アカウント作成成功",
+                    description: "ログインしてサービスをご利用ください。",
+                })
+                navigate('/auth')
             }
         } catch (error) {
             if (axios.isAxiosError(error)) {
-                console.error(error.response?.data || error.message);  // エラーの確認
-            } else {
-                console.error('An unknown error occurred');  // その他のエラー処理
+                toast({
+                    variant: "destructive",
+                    title: "エラー",
+                    description: error.response?.data?.detail || "認証に失敗しました。",
+                })
             }
+        } finally {
+            setIsLoading(false)
         }
-    };
+    }
 
     return (
-        <Card className="w-full max-w-md mx-auto">
-            <form onSubmit={handleSubmit}>
-                <CardHeader>
-                    <CardTitle>アカウント</CardTitle>
-                    <CardDescription>ログインまたは新規アカウントを作成してください。</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Tabs value={activeTab} onValueChange={setActiveTab}>
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="login">ログイン</TabsTrigger>
-                            <TabsTrigger value="signup">サインアップ</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="login">
-                            <form className="space-y-4">
+        <div className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-start pt-16 bg-gradient-to-b from-orange-50/50">
+            <Card className="w-full max-w-md border-orange-100 mt-8">
+                <form onSubmit={handleSubmit}>
+                    <CardHeader className="space-y-1">
+                        <div className="flex items-center gap-2">
+                            <UserRound className="h-6 w-6 text-orange-600" />
+                            <CardTitle className="text-2xl text-orange-800">アカウント</CardTitle>
+                        </div>
+                        <CardDescription className="text-orange-600">
+                            ログインまたは新規アカウントを作成してください
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                            <TabsList className="grid w-full grid-cols-2 mb-4">
+                                <TabsTrigger 
+                                    value="login"
+                                    className={cn(
+                                        "data-[state=active]:bg-orange-600 data-[state=active]:text-white"
+                                    )}
+                                >
+                                    <User className="w-4 h-4 mr-2" />
+                                    ログイン
+                                </TabsTrigger>
+                                <TabsTrigger 
+                                    value="signup"
+                                    className={cn(
+                                        "data-[state=active]:bg-orange-600 data-[state=active]:text-white"
+                                    )}
+                                >
+                                    <UserPlus className="w-4 h-4 mr-2" />
+                                    サインアップ
+                                </TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="login" className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="name">名前</Label>
-                                    <Input id="name" type="text" value={formData.name} onChange={handleChange} required />
+                                    <Label htmlFor="name" className="text-orange-800">ユーザー名</Label>
+                                    <div className="relative">
+                                        <UserRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-orange-500" />
+                                        <Input
+                                            id="name"
+                                            type="text"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            className="pl-10 border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                                            required
+                                        />
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="login-password">パスワード</Label>
-                                    <Input id="password1" type="password" value={formData.password1} onChange={handleChange} required />
+                                    <Label htmlFor="password1" className="text-orange-800">パスワード</Label>
+                                    <div className="relative">
+                                        <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-orange-500" />
+                                        <Input
+                                            id="password1"
+                                            type="password"
+                                            value={formData.password1}
+                                            onChange={handleChange}
+                                            className="pl-10 border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                            </form>
-                        </TabsContent>
-                        <TabsContent value="signup">
-                            <form className="space-y-4">
+                            </TabsContent>
+                            <TabsContent value="signup" className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="signup-name">名前</Label>
-                                    <Input id="name" type="text" value={formData.name} onChange={handleChange} required />
+                                    <Label htmlFor="name" className="text-orange-800">ユーザー名</Label>
+                                    <div className="relative">
+                                        <UserRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-orange-500" />
+                                        <Input
+                                            id="name"
+                                            type="text"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            className="pl-10 border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                                            required
+                                        />
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="signup-email">メールアドレス</Label>
-                                    <Input id="email" type="email" value={formData.email} onChange={handleChange} placeholder="your@email.com" required />
+                                    <Label htmlFor="email" className="text-orange-800">メールアドレス</Label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-orange-500" />
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            className="pl-10 border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                                            placeholder="your@email.com"
+                                            required
+                                        />
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="signup-password">パスワード</Label>
-                                    <Input id="password1" type="password" value={formData.password1} onChange={handleChange} required />
+                                    <Label htmlFor="password1" className="text-orange-800">パスワード</Label>
+                                    <div className="relative">
+                                        <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-orange-500" />
+                                        <Input
+                                            id="password1"
+                                            type="password"
+                                            value={formData.password1}
+                                            onChange={handleChange}
+                                            className="pl-10 border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                                            required
+                                        />
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="signup-password">もう一度入力</Label>
-                                    <Input id="password2" type="password" value={formData.password2} onChange={handleChange} required />
+                                    <Label htmlFor="password2" className="text-orange-800">パスワード（確認）</Label>
+                                    <div className="relative">
+                                        <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-orange-500" />
+                                        <Input
+                                            id="password2"
+                                            type="password"
+                                            value={formData.password2}
+                                            onChange={handleChange}
+                                            className="pl-10 border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                            </form>
-                        </TabsContent>
-                    </Tabs>
-                </CardContent>
-                <CardFooter>
-                    <Button type="submit" className="w-full">{activeTab === "login" ? "ログイン" : "アカウント作成"}</Button>
-                </CardFooter>
-            </form>
-        </Card>
+                            </TabsContent>
+                        </Tabs>
+                    </CardContent>
+                    <CardFooter>
+                        <Button 
+                            type="submit" 
+                            className="w-full bg-orange-600 hover:bg-orange-700"
+                            disabled={isLoading}
+                        >
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {activeTab === "login" ? "ログイン" : "アカウント作成"}
+                        </Button>
+                    </CardFooter>
+                </form>
+            </Card>
+        </div>
     )
 }
+

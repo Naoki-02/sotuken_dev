@@ -1,12 +1,13 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
 import { saveToLocalStorage } from '@/services/SaveLocalStorage'
 import axios from 'axios'
-import { Camera, ImageIcon, RotateCcw, Upload } from 'lucide-react'
+import { Camera, ImageIcon, Receipt, RotateCcw, Upload } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ReceiptSubmissionCompletePage from './CameraSuccessPage'
@@ -24,6 +25,7 @@ export default function ReceiptCaptureScreen() {
     const [isCameraReady, setIsCameraReady] = useState(false)
     const [isCameraMode, setIsCameraMode] = useState(false)
     const [isSubmissionComplete, setIsSubmissionComplete] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
     const videoRef = useRef<HTMLVideoElement>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -51,24 +53,20 @@ export default function ReceiptCaptureScreen() {
             streamRef.current.getTracks().forEach(track => track.stop())
             streamRef.current = null
         }
-
         setIsCameraReady(false)
     }, [])
 
     useEffect(() => {
         if (isCameraMode) {
             startCamera()
-        }
-        else {
+        } else {
             stopCamera()
         }
 
-        // cleanup
         return () => {
             stopCamera()
         }
     }, [isCameraMode, startCamera, stopCamera])
-
 
     const captureImage = useCallback(() => {
         if (videoRef.current && canvasRef.current) {
@@ -79,9 +77,10 @@ export default function ReceiptCaptureScreen() {
                 context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height)
                 const imageDataUrl = canvasRef.current.toDataURL('image/jpeg')
                 setCapturedImage(imageDataUrl)
+                stopCamera()
             }
         }
-    }, [])
+    }, [stopCamera])
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0]
@@ -104,8 +103,8 @@ export default function ReceiptCaptureScreen() {
     const uploadImage = useCallback(async () => {
         if (capturedImage) {
             try {
+                setIsLoading(true)
                 const token = localStorage.getItem('token')
-                // Base64データURLをBlobに変換
                 const base64Data = capturedImage.split(',')[1]
                 const binaryData = atob(base64Data)
                 const arrayBuffer = new Uint8Array(binaryData.length)
@@ -114,97 +113,97 @@ export default function ReceiptCaptureScreen() {
                 }
                 const blob = new Blob([arrayBuffer], { type: 'image/jpeg' })
 
-                // FormDataに画像を追加
                 const formData = new FormData()
                 formData.append('image', blob, 'receipt.jpg')
 
-                // POSTリクエストでアップロード
-                const response = await axios.post('http://localhost:80/service/ocr/', formData, {
+                await axios.post('http://localhost:80/service/ocr/', formData, {
                     headers: {
                         'Authorization': `Token ${token}`,
                         'Content-Type': 'multipart/form-data',
                     },
                 })
 
-                console.log('Upload successful:', response.data)
-
-                await axios.get<Ingredient[]>('http://localhost:80/service/get_ingredients/', {
-                    headers: {
-                        Authorization: `Token ${token}`, // トークンをヘッダーに設定
-                    },
-                }).then((response) => {
-                    console.log("食品データをサーバから取得しました。");
-                    //ローカルストレージにデータを保存
-                    saveToLocalStorage("ingredients", response.data)
-                })
-
-                // 送信完了画面に遷移
-                setIsSubmissionComplete(true)
-
-                await axios.get('http://localhost:80/service/get_recipes/', {
+                const ingredientsResponse = await axios.get<Ingredient[]>('http://localhost:80/service/get_ingredients/', {
                     headers: {
                         Authorization: `Token ${token}`,
                     },
-                }).then((response) => {
-                    saveToLocalStorage("recipes", response.data.recipes)
                 })
+                
+                saveToLocalStorage("ingredients", ingredientsResponse.data)
+
+                const recipesResponse = await axios.get('http://localhost:80/service/get_recipes/', {
+                    headers: {
+                        Authorization: `Token ${token}`,
+                    },
+                })
+                
+                saveToLocalStorage("recipes", recipesResponse.data.recipes)
+                setIsSubmissionComplete(true)
             } catch (err) {
                 console.error('Error uploading image:', err)
+            } finally {
+                setIsLoading(false)
             }
-        } else {
-            console.error('No image captured to upload')
         }
     }, [capturedImage])
 
-    const handleViewFoodList = () => {
-        // 食材一覧ページに遷移
-        navigate('/food-list')
-    }
-
-    const handleCaptureAnother = () => {
-        // 別のレシートを撮影する
-        setIsSubmissionComplete(false)
-        setCapturedImage(null)
-        setIsCameraMode(false)
-    }
-
-    const handleAddManually = () => {
-        // 手動追加ページに遷移
-        navigate('/multi-ingredient-form')
-    }
-
-    //レシート送信完了ページ関数呼び出し
     if (isSubmissionComplete) {
         return (
             <ReceiptSubmissionCompletePage
-                onViewFoodList={handleViewFoodList}
-                onCaptureAnother={handleCaptureAnother}
-                onAddManually={handleAddManually}
+                onViewFoodList={() => navigate('/food-list')}
+                onCaptureAnother={() => {
+                    setIsSubmissionComplete(false)
+                    setCapturedImage(null)
+                    setIsCameraMode(false)
+                }}
+                onAddManually={() => navigate('/multi-ingredient-form')}
             />
         )
     }
 
-
     return (
         <div className="container mx-auto p-4 max-w-2xl">
-            <Card>
+            <Card className="bg-orange-50/50 border-orange-100">
+                <CardHeader className="border-b border-orange-100">
+                    <div className="flex items-center gap-2">
+                        <Receipt className="h-6 w-6 text-orange-600" />
+                        <CardTitle className="text-orange-800">レシート撮影/アップロード</CardTitle>
+                    </div>
+                </CardHeader>
                 <CardContent className="p-6">
-                    <h2 className="text-2xl font-semibold mb-4 text-center">レシート撮影/アップロード</h2>
                     {!capturedImage && (
-                        <div className="flex justify-center space-x-4 mb-4">
-                            <Button onClick={() => setIsCameraMode(true)} variant={isCameraMode ? "default" : "outline"}>
+                        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
+                            <Button 
+                                onClick={() => setIsCameraMode(true)} 
+                                variant={isCameraMode ? "default" : "outline"}
+                                className={cn(
+                                    "w-full sm:w-auto border-orange-200",
+                                    isCameraMode && "bg-orange-600 hover:bg-orange-700"
+                                )}
+                            >
                                 <Camera className="mr-2 h-5 w-5" />
                                 カメラで撮影
                             </Button>
-                            <Button onClick={() => setIsCameraMode(false)} variant={!isCameraMode ? "default" : "outline"}>
+                            <Button 
+                                onClick={() => setIsCameraMode(false)} 
+                                variant={!isCameraMode ? "default" : "outline"}
+                                className={cn(
+                                    "w-full sm:w-auto border-orange-200",
+                                    !isCameraMode && "bg-orange-600 hover:bg-orange-700"
+                                )}
+                            >
                                 <ImageIcon className="mr-2 h-5 w-5" />
                                 画像をアップロード
                             </Button>
                         </div>
                     )}
-                    <div className="aspect-video bg-muted relative overflow-hidden rounded-lg mb-4">
+                    <div className="relative aspect-[4/3] bg-white rounded-lg overflow-hidden mb-6 shadow-inner">
                         {capturedImage ? (
-                            <img src={capturedImage} alt="Captured receipt" className="w-full h-full object-contain" />
+                            <img 
+                                src={capturedImage} 
+                                alt="撮影したレシート" 
+                                className="w-full h-full object-contain"
+                            />
                         ) : isCameraMode ? (
                             <video
                                 ref={videoRef}
@@ -214,42 +213,58 @@ export default function ReceiptCaptureScreen() {
                                 onLoadedMetadata={() => videoRef.current?.play()}
                             />
                         ) : (
-                            <div className="flex items-center justify-center w-full h-full">
-                                <ImageIcon className="w-16 h-16 text-muted-foreground" />
+                            <div className="flex flex-col items-center justify-center w-full h-full gap-4 text-orange-400">
+                                <ImageIcon className="w-16 h-16" />
+                                <p className="text-sm text-orange-600">
+                                    レシートの画像をアップロードしてください
+                                </p>
                             </div>
+                        )}
+                        {isCameraMode && !capturedImage && (
+                            <div className="absolute inset-0 border-2 border-dashed border-orange-300 pointer-events-none" />
                         )}
                     </div>
                     <canvas ref={canvasRef} className="hidden" />
                     {!isCameraMode && !capturedImage && (
-                        <div className="mb-4">
-                            <Label htmlFor="receipt-upload" className="block mb-2">レシート画像をアップロード</Label>
+                        <div className="space-y-2">
+                            <Label 
+                                htmlFor="receipt-upload" 
+                                className="text-orange-800"
+                            >
+                                レシート画像をアップロード
+                            </Label>
                             <Input
                                 id="receipt-upload"
                                 type="file"
                                 accept="image/*"
                                 ref={fileInputRef}
                                 onChange={handleFileUpload}
+                                className="border-orange-200 focus:border-orange-500 focus:ring-orange-500"
                             />
                         </div>
                     )}
-                    <p className="text-sm text-muted-foreground text-center mb-4">
-                        {capturedImage
-                            ? "レシートの画像を確認してください"
-                            : isCameraMode
-                                ? "レシートを枠内に収めて撮影してください"
-                                : "レシートの画像をアップロードしてください"}
-                    </p>
                 </CardContent>
-                <CardFooter className="flex justify-center space-x-4 pb-6">
+                <CardFooter className="flex justify-center gap-4 pb-6">
                     {capturedImage ? (
                         <>
-                            <Button variant="outline" size="lg" onClick={retakePhoto}>
+                            <Button 
+                                variant="outline" 
+                                size="lg" 
+                                onClick={retakePhoto}
+                                className="border-orange-200 hover:bg-orange-100"
+                                disabled={isLoading}
+                            >
                                 <RotateCcw className="mr-2 h-5 w-5" />
                                 撮り直す
                             </Button>
-                            <Button size="lg" onClick={uploadImage}>
+                            <Button 
+                                size="lg" 
+                                onClick={uploadImage}
+                                className="bg-orange-600 hover:bg-orange-700"
+                                disabled={isLoading}
+                            >
                                 <Upload className="mr-2 h-5 w-5" />
-                                送信
+                                {isLoading ? '送信中...' : '送信'}
                             </Button>
                         </>
                     ) : isCameraMode ? (
@@ -257,6 +272,7 @@ export default function ReceiptCaptureScreen() {
                             size="lg"
                             onClick={captureImage}
                             disabled={!isCameraReady}
+                            className="bg-orange-600 hover:bg-orange-700"
                         >
                             <Camera className="mr-2 h-5 w-5" />
                             撮影
@@ -265,6 +281,7 @@ export default function ReceiptCaptureScreen() {
                         <Button
                             size="lg"
                             onClick={() => fileInputRef.current?.click()}
+                            className="bg-orange-600 hover:bg-orange-700"
                         >
                             <ImageIcon className="mr-2 h-5 w-5" />
                             画像を選択
@@ -275,3 +292,4 @@ export default function ReceiptCaptureScreen() {
         </div>
     )
 }
+

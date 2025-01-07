@@ -1,5 +1,5 @@
 import { useAuth } from '@/services/AuthContext'
-import { Camera, ClipboardList, Home, List, PlusCircle, User } from 'lucide-react'
+import { Camera, ClipboardList, History, Home, List, PlusCircle, User } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export function MobileNav() {
@@ -27,6 +27,10 @@ export function MobileNav() {
         <Link to="/Survey" className="flex flex-col items-center justify-center text-gray-600 hover:text-gray-900">
           <ClipboardList className="h-6 w-6" />
           <span className="text-xs">アンケート</span>
+        </Link>
+        <Link to="/history" className="flex flex-col items-center justify-center text-gray-600 hover:text-gray-900">
+          <History className="h-6 w-6" />
+          <span className="text-xs">履歴</span>
         </Link>
         <Link to={isAuthenticated ? "/logout" : "/auth"} className="flex flex-col items-center justify-center text-gray-600 hover:text-gray-900">
           <User className="h-6 w-6" />

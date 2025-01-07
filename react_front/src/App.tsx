@@ -6,6 +6,7 @@ import AddIngredientPage from './pages/AddIngredientPage';
 import AuthForm from './pages/authForm';
 import CameraApp from './pages/camera';
 import FoodListPage from './pages/FoodListPage';
+import CookingHistoryPage from './pages/HistoryPage';
 import HomePage from './pages/HomePage';
 import Layout from './pages/Layout';
 import Logout from './pages/LogoutPage';
@@ -32,6 +33,7 @@ function App() {
             <Route path="logout" element={<Logout />} />
             <Route path="camera" element={<CameraApp />} />
             <Route path='recipe' element={<RecipePage />} />
+            <Route path="history" element={<CookingHistoryPage />} />
           </Route>
         </Route>
       </Routes>
