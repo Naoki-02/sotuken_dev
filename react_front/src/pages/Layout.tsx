@@ -1,7 +1,7 @@
 import { Toaster } from '@/components/ui/toaster'
 import { useAuth } from '@/services/AuthContext'
+import { FanButton } from '@/services/FanButton'
 import { MobileNav } from '@/services/mobile-nav'
-import { SuggestionButton } from '@/services/suggestion-button'
 import { SuggestionSpan } from '@/services/suggestion-span'
 import { Facebook, Instagram, Menu, Twitter, X } from 'lucide-react'
 import React, { useState } from 'react'
@@ -74,7 +74,8 @@ export default function Layout({ children }: LayoutProps) {
                 <Toaster />
             </main>
 
-            <SuggestionButton />
+            {/* <SuggestionButton /> */}
+            <FanButton />
 
             <MobileNav />
 

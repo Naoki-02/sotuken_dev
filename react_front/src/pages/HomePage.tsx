@@ -3,7 +3,7 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Camera, ChefHat, HelpCircle, List, MessageCircle, Receipt, ScrollText, ShoppingCart, Utensils } from 'lucide-react'
+import { Camera, ChefHat, HelpCircle, List, MessageCircle, Receipt, ScrollText, ShoppingCart } from 'lucide-react'
 
 const features = [
   {
@@ -135,20 +135,20 @@ export default function HomePage() {
                   <p className="text-sm text-orange-600">明るい場所で、レシート全体が写るように撮影してください</p>
                 </div>
               </div>
-              <div className="flex gap-3 p-4 bg-white/80 rounded-lg border border-orange-100">
+              {/* <div className="flex gap-3 p-4 bg-white/80 rounded-lg border border-orange-100">
                 <Utensils className="w-5 h-5 text-orange-600 flex-shrink-0 mt-1" />
                 <div>
                   <h3 className="font-medium text-orange-800 mb-1">レシピのカスタマイズ</h3>
                   <p className="text-sm text-orange-600">提案されたレシピは、材料や手順を自由にアレンジできます</p>
                 </div>
-              </div>
-              <div className="flex gap-3 p-4 bg-white/80 rounded-lg border border-orange-100">
+              </div> */}
+              {/* <div className="flex gap-3 p-4 bg-white/80 rounded-lg border border-orange-100">
                 <MessageCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-1" />
                 <div>
                   <h3 className="font-medium text-orange-800 mb-1">コミュニティの活用</h3>
                   <p className="text-sm text-orange-600">他のユーザーのレシピやアレンジも参考にできます</p>
                 </div>
-              </div>
+              </div> */}
             </div>
           </CardContent>
         </Card>

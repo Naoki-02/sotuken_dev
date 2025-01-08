@@ -103,3 +103,49 @@ class CookHistory(models.Model):
 
     def __str__(self):
         return f"{self.user.username} cooked {self.recipe.name} on {self.cooked_at}"
+    
+# Dish (料理) モデル
+class Dish(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='dishes')  # ユーザーとの関連
+    name = models.CharField(max_length=255)  # 料理名
+    description = models.TextField(blank=True, null=True)  # 料理の簡単な説明
+    cooking_time = models.CharField(max_length=50, blank=True, null=True)  # 調理時間
+    meal_type = models.CharField(max_length=10, choices=[
+        ('main', '主菜'),
+        ('side', '副菜'),
+        ('soup', '汁物')
+    ])
+    def __str__(self):
+        return f"{self.name} ({self.get_meal_type_display()})"
+
+
+# 1日の食事（朝食、昼食、夕食）
+class Meal(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='meals')  # ユーザーとの関連
+    meal_time = models.CharField(max_length=10, choices=[
+        ('breakfast', '朝食'),
+        ('lunch', '昼食'),
+        ('dinner', '夕食')
+    ])  # 食事の時間（朝食、昼食、夕食）
+    dishes = models.ManyToManyField(Dish) # その食事に含まれる料理
+
+    def __str__(self):
+        return f"{self.get_meal_time_display()} - {self.user.username}" 
+    
+class DishIngredient(models.Model):
+    dish = models.ForeignKey(Dish, on_delete=models.CASCADE, related_name="ingredients")  # 料理と紐付け
+    name = models.CharField(max_length=255)  # 材料名
+
+    def __str__(self):
+        return self.name
+    
+class DishInstruction(models.Model):
+    dish = models.ForeignKey(Dish, on_delete=models.CASCADE, related_name="instructions")
+    step_number = models.PositiveIntegerField()
+    description = models.TextField()
+
+    class Meta:
+        ordering = ['step_number']
+
+    def __str__(self):
+        return f"Step {self.step_number} for {self.recipe.name}"

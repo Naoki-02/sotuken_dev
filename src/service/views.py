@@ -16,15 +16,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import CookHistory, Ingredient, Ingredients, Instruction, Recipe
+from .models import (CookHistory, Dish, DishIngredient, DishInstruction,
+                     Ingredient, Ingredients, Instruction, Meal, Recipe)
 from .serializers import (CookHistorySerializer, IngredientSerializer,
-                          RecipeSerializer)
+                          MealSerializer, RecipeSerializer)
 
 logger = logging.getLogger('myapp')
 
+
 class ChatGPTView(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def post(self, request, *args, **kwargs):
         # client = OpenAI(api_key=settings.OEPNAI_API_KEY)
         user_message = request.POST.get('message')
@@ -70,24 +72,24 @@ class ChatGPTView(APIView):
             #                 "nutritional_comment": "Comment on nutritional balance"
             #             Using the given list of ingredients, please suggest a menu in the above format."""
             #         },
-                    
+
             #         {"role": "user", "content": user_message},
             #     ],
             # )
-            
+
             # gpt_response = response.choices[0].message.content.strip()
             # data = json.loads(gpt_response)
-            
+
             try:
                 # JSONレスポンスをPythonの辞書に変換
-                with open('tmp.json','r') as f:
+                with open('tmp.json', 'r') as f:
                     data = json.load(f)
                 # json.dump関数を使ったJSONファイルへの書き出し
                 # with open('tmp.json', 'wt') as f:
                     # json.dump(data, f)
             except json.JSONDecodeError:
                 data = None
-            
+
             if data is not None:
                 return JsonResponse({'response': data["menu"][0]["name"]}, status=200)
             else:
@@ -98,17 +100,213 @@ class ChatGPTView(APIView):
         #     return JsonResponse({'error': 'APIキーが無効です。設定を確認してください。'}, status=401)
         except Exception as e:
             return JsonResponse({'error': 'ChatGPT APIへのリクエスト中にエラーが発生しました。'}, status=500)
-    
-class RecipeSuggestionView(APIView):
-     # このビューに認証を必須にする
+
+
+class Recipe_1DaySuggestionView(APIView):
+    # このビューに認証を必須にする
     permission_classes = [IsAuthenticated]
+
     def get(self, request, *args, **kwargs):
         try:
             # 現在ログインしているユーザーの材料を取得
             ingredients = Ingredients.objects.filter(user=request.user)
             ingredient_names = [ingredient.name for ingredient in ingredients]
-            saved_recipe=[]
+            meals= []
+
+            if not ingredient_names:
+                return JsonResponse({"error": "No ingredients found for the user."}, status=400)
+
+            # ChatGPT API用プロンプトを生成
+            prompt = self.generate_prompt(ingredient_names)
+            ststem_prompt = """
+            あなたは料理の専門家です。
+            ユーザからの材料リストを基に作れる料理を提案してください。以下のフォーマットで結果を返してください：            
+            {
+                "breakfast": [
+                    {
+                        "type": "主菜",
+                        "name": "料理名",
+                        "ingredients": ["必要な材料1", "必要な材料2", ...],
+                        "description": "料理の簡単な説明",
+                        "instructions": ["手順1","手順2","手順3",...],
+                        "cookingTime": "調理時間（例: 約30分）"
+                    },
+                    {
+                        "type": "副菜",
+                        "name": "料理名",
+                        "ingredients": ["必要な材料1", "必要な材料2", ...],
+                        "description": "料理の簡単な説明",
+                        "instructions": ["手順1","手順2","手順3",...],
+                        "cookingTime": "調理時間（例: 約30分）",
+                    },
+                    {
+                        "type": "汁物",
+                        "name": "料理名",
+                        "ingredients": ["必要な材料1", "必要な材料2", ...],
+                        "description": "料理の簡単な説明",
+                        "instructions": ["手順1","手順2","手順3",...],
+                        "cookingTime": "調理時間（例: 約30分）",
+                    }
+                ],
+                "lunch": [
+                    {
+                        "type": "主菜",
+                        "name": "料理名",
+                        "ingredients": ["必要な材料1", "必要な材料2", ...],
+                        "description": "料理の簡単な説明",
+                        "instructions": ["手順1","手順2","手順3",...],
+                        "cookingTime": "調理時間（例: 約30分）",
+                    },
+                    {
+                        "type": "副菜",
+                        "name": "料理名",
+                        "ingredients": ["必要な材料1", "必要な材料2", ...],
+                        "description": "料理の簡単な説明",
+                        "instructions": ["手順1","手順2","手順3",...],
+                        "cookingTime": "調理時間（例: 約30分）",
+                    },
+                    {
+                        "type": "汁物",
+                        "name": "料理名",
+                        "ingredients": ["必要な材料1", "必要な材料2", ...],
+                        "description": "料理の簡単な説明",
+                        "instructions": ["手順1","手順2","手順3",...],
+                        "cookingTime": "調理時間（例: 約30分）",
+                    }
+                ],
+                "dinner": [
+                    {
+                        "type": "主菜",
+                        "name": "料理名",
+                        "ingredients": ["必要な材料1", "必要な材料2", ...],
+                        "description": "料理の簡単な説明",
+                        "instructions": ["手順1","手順2","手順3",...],
+                        "cookingTime": "調理時間（例: 約30分）",
+                    },
+                    {
+                        "type": "副菜",
+                        "name": "料理名",
+                        "ingredients": ["必要な材料1", "必要な材料2", ...],
+                        "description": "料理の簡単な説明",
+                        "instructions": ["手順1","手順2","手順3",...],
+                        "cookingTime": "調理時間（例: 約30分）",
+                    },
+                    {
+                        "type": "汁物",
+                        "name": "料理名",
+                        "ingredients": ["必要な材料1", "必要な材料2", ...],
+                        "description": "料理の簡単な説明",
+                        "instructions": ["手順1","手順2","手順3",...],
+                        "cookingTime": "調理時間（例: 約30分）",
+                    }
+                ]
+            }
             
+            
+            ※ 一日分の献立を提案してください。朝食、昼食、夕食の3食分を提案してください。
+            ※ 主菜、副菜、汁物の3品からなる一汁三菜の献立を提案してください。
+            ※ 可能な限り所持している材料を活用してください。
+            ※ 簡単な説明と手順を具体的に記述してください。調味料も含めてください。
+            ※ 絶対に必要な材料に調味料などは含めないでください。
+            ※ JSON形式でのみ返答してください。不要な文字やフォーマットは一切含めないでください。
+            """
+
+            # ChatGPT APIにリクエストを送信
+            client = OpenAI(api_key=settings.OEPNAI_API_KEY)
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": ststem_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=5000,
+                temperature=0.8,
+            )
+
+            # APIのレスポンスを解析
+            recipes_jsondata = json.loads(response.choices[0].message.content)
+            # recipes_data=response.choices[0].message.content
+            # レスポンス内容をテキストファイルに保存
+            file_path = os.path.join(settings.BASE_DIR, "debug_response.txt")
+            with open(file_path, "w", encoding="utf-8") as file:
+                file.write(response.choices[0].message.content)
+                
+            for meal_time,meal_dishes in recipes_jsondata.items():
+                meal=Meal.objects.create(user=request.user,meal_time=meal_time)
+                
+                for dish_data in meal_dishes:
+                    
+                    dish=Dish.objects.create(
+                        user=request.user,
+                        name=dish_data["name"],
+                        description=dish_data["description"],
+                        cooking_time=dish_data["cookingTime"],
+                        meal_type=dish_data["type"]
+                    )
+                    
+                    for ingredient_name in dish_data["ingredients"]:
+                        DishIngredient.objects.create(dish=dish,name=ingredient_name)
+                        
+                    for step_number,instruction_text in enumerate(dish_data["instructions"],start=1):
+                        DishInstruction.objects.create(dish=dish,step_number=step_number,description=instruction_text)
+                    
+                    meal.dishes.add(dish)
+                    
+                meal.save()
+                meals.append(meal)
+                
+            meal_serializer=MealSerializer(meals,many=True)
+            
+            return JsonResponse({"meal":meal_serializer.data},status=200)
+
+            # for recipe_data in recipes_jsondata:
+            #     recipe=Recipe(
+            #         user=request.user,
+            #         name=recipe_data["name"],
+            #         description=recipe_data["description"],
+            #         cooking_time=recipe_data["cookingTime"],
+            #         difficulty=recipe_data["difficulty"]
+            #     )
+            #     #Recipeモデルを保存
+            #     recipe.save()
+
+            #     #ingredientモデルを保存
+            #     for ingredient_name in recipe_data["ingredients"]:
+            #         Ingredient.objects.create(recipe=recipe,name=ingredient_name)
+
+            #     #Instructionモデルを保存
+            #     for step_number,instruction_text in enumerate(recipe_data["instructions"],start=1):
+            #         Instruction.objects.create(recipe=recipe,step_number=step_number,description=instruction_text)
+
+            #     #保存したレシピをリストに追加
+            #     saved_recipe.append(recipe)
+
+            # # 保存したすべてのレシピをシリアライズ
+            # serializer=RecipeSerializer(saved_recipe,many=True)
+            # return JsonResponse({"recipes": serializer.data}, status=200)
+            return JsonResponse({"recipes": recipes_jsondata}, status=200)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    def generate_prompt(self, ingredients):
+        # ChatGPT API用のプロンプトを生成するメソッド。
+        return f"""
+        以下はあなたが利用可能な材料のリストです：
+        {", ".join(ingredients)}
+        """
+
+
+class RecipeSuggestionView(APIView):
+    # このビューに認証を必須にする
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            # 現在ログインしているユーザーの材料を取得
+            ingredients = Ingredients.objects.filter(user=request.user)
+            ingredient_names = [ingredient.name for ingredient in ingredients]
+            saved_recipe = []
+
             if not ingredient_names:
                 return JsonResponse({"error": "No ingredients found for the user."}, status=400)
 
@@ -155,37 +353,39 @@ class RecipeSuggestionView(APIView):
             )
 
             # APIのレスポンスを解析
-            recipes_jsondata=json.loads(response.choices[0].message.content)
+            recipes_jsondata = json.loads(response.choices[0].message.content)
             # recipes_data=response.choices[0].message.content
             # レスポンス内容をテキストファイルに保存
             file_path = os.path.join(settings.BASE_DIR, "debug_response.txt")
             with open(file_path, "w", encoding="utf-8") as file:
                 file.write(response.choices[0].message.content)
-                
+
             for recipe_data in recipes_jsondata:
-                recipe=Recipe(
+                recipe = Recipe(
                     user=request.user,
                     name=recipe_data["name"],
                     description=recipe_data["description"],
                     cooking_time=recipe_data["cookingTime"],
                     difficulty=recipe_data["difficulty"]
                 )
-                #Recipeモデルを保存
+                # Recipeモデルを保存
                 recipe.save()
-                
-                #ingredientモデルを保存
+
+                # ingredientモデルを保存
                 for ingredient_name in recipe_data["ingredients"]:
-                    Ingredient.objects.create(recipe=recipe,name=ingredient_name)
-                
-                #Instructionモデルを保存
-                for step_number,instruction_text in enumerate(recipe_data["instructions"],start=1):
-                    Instruction.objects.create(recipe=recipe,step_number=step_number,description=instruction_text)
-                
-                #保存したレシピをリストに追加
+                    Ingredient.objects.create(
+                        recipe=recipe, name=ingredient_name)
+
+                # Instructionモデルを保存
+                for step_number, instruction_text in enumerate(recipe_data["instructions"], start=1):
+                    Instruction.objects.create(
+                        recipe=recipe, step_number=step_number, description=instruction_text)
+
+                # 保存したレシピをリストに追加
                 saved_recipe.append(recipe)
-            
+
             # 保存したすべてのレシピをシリアライズ
-            serializer=RecipeSerializer(saved_recipe,many=True)
+            serializer = RecipeSerializer(saved_recipe, many=True)
             return JsonResponse({"recipes": serializer.data}, status=200)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
@@ -196,7 +396,7 @@ class RecipeSuggestionView(APIView):
         以下はあなたが利用可能な材料のリストです：
         {", ".join(ingredients)}
         """
-  
+
 
 class PostIngredientsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -231,18 +431,20 @@ class PostIngredientsView(APIView):
         except Exception as e:
             logger.error('An error occurred', exc_info=True)
             return JsonResponse({'error': 'An internal server error occurred'}, status=500)
-        
+
+
 class GetIngredientsListView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated] #ユーザ認証が必要
+    permission_classes = [IsAuthenticated]  # ユーザ認証が必要
     serializer_class = IngredientSerializer
 
     def get_queryset(self):
         return Ingredients.objects.filter(user=self.request.user)
-    
+
+
 class DeleteIngredients(APIView):
     permission_classes = [IsAuthenticated]
-    
-    def delete(self,request,pk):
+
+    def delete(self, request, pk):
         try:
             Ingredients.objects.get(pk=pk).delete()
             return JsonResponse({'message': '材料が正常に削除されました！'}, status=200)
@@ -251,41 +453,45 @@ class DeleteIngredients(APIView):
         except Exception as e:
             logger.error('エラーが発生しました', exc_info=True)
             return JsonResponse({'error': '内部サーバーエラーが発生しました'}, status=500)
-        
+
+
 class DeleteUseIngredients(APIView):
     permission_classes = [IsAuthenticated]
+
     def delete(self, request):
         try:
-            recipe_id=request.data.get("recipe_id")
-            names=request.data.get("names",[])  # 複数の食材名をリストとして取得
-            not_found_items=[]
-            
+            recipe_id = request.data.get("recipe_id")
+            names = request.data.get("names", [])  # 複数の食材名をリストとして取得
+            not_found_items = []
+
             try:
-                recipe=Recipe.objects.get(id=recipe_id)
+                recipe = Recipe.objects.get(id=recipe_id)
             except Recipe.DoesNotExist:
                 return JsonResponse({'error': 'レシピが見つかりません'}, status=404)
-                
+
             CookHistory.objects.create(
                 user=request.user,
                 recipe=recipe,
             )
-            
+
             for name in names:
-                ingredient = Ingredients.objects.filter(user=request.user, name__icontains=name).first()
+                ingredient = Ingredients.objects.filter(
+                    user=request.user, name__icontains=name).first()
                 if ingredient:
                     ingredient.delete()
                 else:
                     not_found_items.append(name)
-                    
+
             response = {'message': '材料が正常に削除されました！'}
             if not_found_items:
                 response['not_found_items'] = not_found_items
-                
+
             return JsonResponse(response, status=200)
-        
+
         except Exception as e:
             logger.error('エラーが発生しました', exc_info=True)
             return JsonResponse({'error': '内部サーバーエラーが発生しました'}, status=500)
+
 
 class UpdateIngredients(APIView):
     permission_classes = [IsAuthenticated]
@@ -310,12 +516,14 @@ class UpdateIngredients(APIView):
             logger.error('エラーが発生しました', exc_info=True)
             return JsonResponse({'error': '内部サーバーエラーが発生しました'}, status=500)
 
+
 class OCRView(APIView):
-    permission_classes = [IsAuthenticated] #ユーザ認証が必要
-    def post(self,request,*args,**kwargs):
-        #ファイルを取得
-        uploaded_file: InMemoryUploadedFile = request.FILES.get('image',None)
-        
+    permission_classes = [IsAuthenticated]  # ユーザ認証が必要
+
+    def post(self, request, *args, **kwargs):
+        # ファイルを取得
+        uploaded_file: InMemoryUploadedFile = request.FILES.get('image', None)
+
         if not uploaded_file:
             return Response({"error": "No image file provided"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -324,7 +532,8 @@ class OCRView(APIView):
             image_data = base64.b64encode(uploaded_file.read()).decode("utf-8")
 
             # Google Vision APIのURL
-            url = f"https://vision.googleapis.com/v1/images:annotate?key={settings.VISION_API_KEY}"
+            url = f"https://vision.googleapis.com/v1/images:annotate?key={
+                settings.VISION_API_KEY}"
 
             # リクエストデータの作成
             request_data = {
@@ -348,7 +557,7 @@ class OCRView(APIView):
 
             # レスポンスからテキストを抽出
             response_data = response.json()
-            
+
             # 画像OCRデータをJSONファイルに保存
             # try:
             #     with open("camera.json", "w", encoding="utf-8") as json_file:
@@ -356,12 +565,12 @@ class OCRView(APIView):
             #     print(f"Data successfully saved to JSON file.")
             # except Exception as e:
             #     print(f"An error occurred while saving to JSON: {e}")
-                
+
             try:
                 text = response_data["responses"][0]["textAnnotations"][0]["description"]
             except (KeyError, IndexError):
                 text = "No text detected."
-                
+
             # 食材らしい項目を抽出するための正規表現
             pattern = r"^(03|13|01)\*?([^¥]*)"  # 03*, 13*, 01* で始まる商品名を抽出
 
@@ -379,7 +588,7 @@ class OCRView(APIView):
                         name, quantity = rest.rsplit(" ", 1)
                     else:
                         name, quantity = rest, "1個"  # 数量がない場合はデフォルトで1個
-                        
+
                     # type を追加
                     if category == "03":
                         item_type = "vegetable"
@@ -389,37 +598,39 @@ class OCRView(APIView):
                         item_type = "meat"
                     else:
                         item_type = "other"
-                    ingredients_list.append({"category": item_type, "name": name, "quantity": quantity})
+                    ingredients_list.append(
+                        {"category": item_type, "name": name, "quantity": quantity})
 
             for ingredient_data in ingredients_list:
-                    if not ingredient_data:
-                        logger.warning('Name not provided for an ingredient')
-                        return JsonResponse({'message': 'Name is required for each ingredient'}, status=400)
+                if not ingredient_data:
+                    logger.warning('Name not provided for an ingredient')
+                    return JsonResponse({'message': 'Name is required for each ingredient'}, status=400)
 
-                    ingredients = Ingredients(
-                        user_id=request.user.id,
-                        name=ingredient_data.get('name'),
-                        quantity=ingredient_data.get('quantity'),
-                        category=ingredient_data.get('category')
-                    )
-                    ingredients.save()
-                
-            return Response({"message": "保存完了しました。" }, status=status.HTTP_200_OK)
-        
+                ingredients = Ingredients(
+                    user_id=request.user.id,
+                    name=ingredient_data.get('name'),
+                    quantity=ingredient_data.get('quantity'),
+                    category=ingredient_data.get('category')
+                )
+                ingredients.save()
+
+            return Response({"message": "保存完了しました。"}, status=status.HTTP_200_OK)
+
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 class CookHistoryView(APIView):
     permission_classes = [IsAuthenticated]
-    
-    def get(self,request):
+
+    def get(self, request):
         try:
             # ユーザーの調理履歴を取得
             history = CookHistory.objects.filter(user=request.user)
-            
+
             # シリアライザーを使用してデータをシリアライズ
-            serializer =CookHistorySerializer(history, many=True)
-            
+            serializer = CookHistorySerializer(history, many=True)
+
             return JsonResponse({'history': serializer.data}, status=200)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)

@@ -1,52 +1,52 @@
-"use client"
+'use client'
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { PopupDialog } from "@/services/PopupDialog"
-import { Recipe } from "@/types/recipe-types"
+import { Dish } from "@/types/recipe1day-types"
 import axios from 'axios'
 import { ArrowLeft, CheckCircle, ChefHat, Clock, ListOrdered, Utensils } from 'lucide-react'
 import { useState } from "react"
 
-interface RecipeDetailProps {
-  recipe: Recipe
+interface DishDetailProps {
+  dish: Dish
   onBack: () => void
 }
 
-export default function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
+export default function DishDetail({ dish, onBack }: DishDetailProps) {
   const [isCooking, setIsCooking] = useState(false)
 
-  const handleCook = async() => {
+  const handleCook = async () => {
     try {
-      const names = recipe.ingredients
+      const names = dish.ingredients
       const token = localStorage.getItem('token')
-      const storedRecipes = localStorage.getItem('recipes')
-      const recipes = storedRecipes ? JSON.parse(storedRecipes) : []
-      
-      const updatedRecipes = recipes.filter((recipe: Recipe) => {
-        const hasIngredientToRemove = recipe.ingredients.some((ingredient) =>
+      const storedDishes = localStorage.getItem('dishes')
+      const dishes = storedDishes ? JSON.parse(storedDishes) : []
+
+      const updatedDishes = dishes.filter((d: Dish) => {
+        const hasIngredientToRemove = d.ingredients.some((ingredient) =>
           names.includes(ingredient)
         )
         return !hasIngredientToRemove
       })
-      
-      localStorage.setItem('recipes', JSON.stringify(updatedRecipes))
+
+      localStorage.setItem('dishes', JSON.stringify(updatedDishes))
 
       await axios.delete("http://localhost:80/service/cook/", {
-        data: { recipe_id: recipe.id, names: names },
+        data: { dish_id: dish.id, names: names },
         headers: {
           'Authorization': token ? `Token ${token}` : '',
         }
       })
 
-      const localingredients = localStorage.getItem('ingredients')
-      const ingredients = localingredients ? JSON.parse(localingredients) : []
+      const localIngredients = localStorage.getItem('ingredients')
+      const ingredients = localIngredients ? JSON.parse(localIngredients) : []
       const updatedIngredients = ingredients.filter(
         (ingredient: { name: string }) => !names.includes(ingredient.name)
       )
-      
+
       localStorage.setItem('ingredients', JSON.stringify(updatedIngredients))
       setIsCooking(true)
     } catch (error) {
@@ -54,18 +54,18 @@ export default function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
     }
   }
 
-  if (!recipe) {
+  if (!dish) {
     return (
       <div className="container mx-auto p-4">
         <Card className="max-w-md mx-auto bg-orange-50/50 border-orange-100">
           <CardHeader>
-            <CardTitle className="text-orange-800">レシピが見つかりません</CardTitle>
+            <CardTitle className="text-orange-800">料理が見つかりません</CardTitle>
             <CardDescription className="text-orange-600">
-              申し訳ありませんが、指定されたレシピは存在しないか、読み込めませんでした。
+              申し訳ありませんが、指定された料理は存在しないか、読み込めませんでした。
             </CardDescription>
           </CardHeader>
           <CardFooter>
-            <Button 
+            <Button
               onClick={onBack}
               className="w-full bg-orange-600 hover:bg-orange-700"
             >
@@ -79,24 +79,24 @@ export default function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
 
   return (
     <div className="container mx-auto px-4 md:px-8 lg:px-20 py-4">
-      <Button 
-        variant="ghost" 
-        onClick={onBack} 
+      <Button
+        variant="ghost"
+        onClick={onBack}
         className="mb-4 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
       >
         <ArrowLeft className="mr-2 h-4 w-4" /> 戻る
       </Button>
-      
+
       <Card className="w-full bg-orange-50/50 border-orange-100">
         <CardHeader className="border-b border-orange-100">
           <div className="space-y-4">
             <div className="flex items-start justify-between">
               <div>
                 <CardTitle className="text-2xl md:text-3xl text-orange-800 mb-2">
-                  {recipe.name}
+                  {dish.name}
                 </CardTitle>
                 <CardDescription className="text-orange-600 text-base">
-                  {recipe.description}
+                  {dish.description}
                 </CardDescription>
               </div>
               {isCooking && (
@@ -106,20 +106,16 @@ export default function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
                 </Badge>
               )}
             </div>
-            
+
             <div className="flex flex-wrap gap-4">
               <Badge variant="secondary" className="bg-white border-orange-200 text-orange-700">
                 <Clock className="mr-2 h-4 w-4" />
-                {recipe.cookingTime}
+                {dish.cooking_time}
               </Badge>
               <Badge variant="secondary" className="bg-white border-orange-200 text-orange-700">
                 <ChefHat className="mr-2 h-4 w-4" />
-                {recipe.difficulty}
+                {dish.meal_type}
               </Badge>
-              {/* <Badge variant="secondary" className="bg-white border-orange-200 text-orange-700">
-                <Flame className="mr-2 h-4 w-4" />
-                {recipe.calories || "300kcal"}
-              </Badge> */}
             </div>
           </div>
         </CardHeader>
@@ -131,9 +127,9 @@ export default function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
               <h3 className="text-xl font-semibold text-orange-800">材料</h3>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-              {recipe.ingredients.map((ingredient, index) => (
-                <Badge 
-                  key={index} 
+              {dish.ingredients.map((ingredient, index) => (
+                <Badge
+                  key={index}
                   variant="secondary"
                   className="bg-white border-orange-200 text-orange-700 justify-center py-2"
                 >
@@ -151,8 +147,8 @@ export default function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
               <h3 className="text-xl font-semibold text-orange-800">手順</h3>
             </div>
             <ol className="space-y-4">
-              {recipe.instructions.map((instruction, index) => (
-                <li 
+              {dish.instructions.map((instruction, index) => (
+                <li
                   key={index}
                   className="flex gap-4 p-4 bg-white rounded-lg border border-orange-100"
                 >
@@ -175,8 +171,8 @@ export default function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
           ) : (
             <PopupDialog
               trigger={
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   className="bg-orange-600 hover:bg-orange-700"
                 >
                   <Utensils className="mr-2 h-5 w-5" />
@@ -202,4 +198,3 @@ export default function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
     </div>
   )
 }
-

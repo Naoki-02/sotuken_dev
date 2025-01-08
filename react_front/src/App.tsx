@@ -10,6 +10,7 @@ import HomePage from './pages/HomePage';
 import Layout from './pages/Layout';
 import Logout from './pages/LogoutPage';
 import MultiIngredientForm from './pages/multi-ingredient-form';
+import Recipe1day from './pages/recipe-1daysuggestion';
 import SurveyPage from './pages/SurveyPage';
 import { AuthProvider } from './services/AuthContext';
 import ProtectedRoute from './services/protectedRoute';
@@ -32,6 +33,7 @@ function App() {
             <Route path="camera" element={<CameraApp />} />
             <Route path='recipe' element={<RecipePage />} />
             <Route path="history" element={<CookingHistoryPage />} />
+            <Route path="daily-menu" element={<Recipe1day />} />
           </Route>
         </Route>
       </Routes>

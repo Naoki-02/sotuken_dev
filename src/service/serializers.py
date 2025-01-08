@@ -1,7 +1,8 @@
 # serializers.py
 from rest_framework import serializers
 
-from .models import CookHistory, Ingredient, Ingredients, Instruction, Recipe
+from .models import (CookHistory, Dish, Ingredient, Ingredients, Instruction,
+                     Meal, Recipe)
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -55,3 +56,24 @@ class CookHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = CookHistory
         fields = ['id', 'recipe', 'cooked_at']
+        
+class DishSerializer(serializers.ModelSerializer):
+    ingredients = serializers.SerializerMethodField()
+    instructions = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Dish
+        fields = ['id', 'name', 'description','ingredients','instructions','cooking_time','meal_type']
+        
+    def get_ingredients(self, obj):
+        return [ingredient.name for ingredient in obj.ingredients.all()]
+
+    def get_instructions(self, obj):
+        return [instruction.description for instruction in obj.instructions.all()]
+    
+class MealSerializer(serializers.ModelSerializer):
+    dishes=DishSerializer(many=True)
+    
+    class Meta:
+        model=Meal
+        fields=['meal_time','dishes']
