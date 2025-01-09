@@ -1,6 +1,5 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -174,9 +173,6 @@ export default function CookingHistoryPage() {
               <ChefHat className="h-12 w-12 text-orange-400 mx-auto mb-4" />
               <p className="text-orange-800 font-medium">調理履歴がありません</p>
               <p className="text-orange-600 mt-2">新しいレシピを試してみましょう！</p>
-              <Button className="mt-4 bg-orange-600 hover:bg-orange-700">
-                レシピを探す
-              </Button>
             </div>
           )}
         </CardContent>

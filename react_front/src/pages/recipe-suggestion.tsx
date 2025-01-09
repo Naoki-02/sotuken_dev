@@ -5,14 +5,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Recipe } from "@/types/recipe-types"
-import { ChefHat, Clock, Utensils } from 'lucide-react'
-
+import { ChefHat, Clock, RefreshCcw, Utensils } from 'lucide-react'
+import { useNavigate } from "react-router-dom"
 interface RecipeSuggestionProps {
   recipes: Recipe[];
   onViewRecipe: (recipe: Recipe) => void;
 }
 
 export default function RecipeSuggestion({ recipes, onViewRecipe }: RecipeSuggestionProps) {
+  const navigate = useNavigate()
   return (
     <div className="container mx-auto p-4">
       <div className="text-center mb-8">
@@ -21,6 +22,19 @@ export default function RecipeSuggestion({ recipes, onViewRecipe }: RecipeSugges
           <h1 className="text-3xl font-bold text-orange-800">おすすめのレシピ</h1>
         </div>
         <p className="text-orange-600">今日の食材でつくれるレシピをご提案します</p>
+        <div className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                localStorage.removeItem('recipes');
+                navigate('/')
+              }}
+              className="border-orange-200 hover:bg-orange-100 text-orange-700 hover:text-orange-800"
+            >
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              レシピを再提案
+            </Button>
+          </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

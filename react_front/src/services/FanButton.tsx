@@ -2,22 +2,21 @@
 
 import { Button } from "@/components/ui/button"
 import { AnimatePresence, motion } from 'framer-motion'
-import { Calendar, CalendarDays, ChefHat, CookingPot, Recycle } from 'lucide-react'
+import { Calendar, ChefHat, CookingPot, Recycle } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 const menuItems = [
     { icon: Calendar, label: '一日献立提案', path: '/daily-menu'},
-    { icon: CalendarDays, label: '３日分の献立提案', path: '/three-day-menu'},
-    { icon: Recycle, label: 'リメイク料理提案', path: '/remake-recipes'},
+    { icon: Recycle, label: 'リメイク料理提案', path: '/'},
     { icon: CookingPot, label: '今ある食材から提案', path: '/recipe'},
 ]
 
 export function FanButton() {
   const [isOpen, setIsOpen] = useState(false)
 
-  const radius = 140 // 扇の半径
-  const angleStep = 30 // ボタン間の角度（度数法）
+  const radius = 120 // 扇の半径
+  const angleStep = 40 // ボタン間の角度（度数法）
   const startAngle = 0 // 開始角度（度数法）
 
   const toggleMenu = () => {

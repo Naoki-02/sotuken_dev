@@ -4,8 +4,12 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { PopupDialog } from "@/services/PopupDialog"
 import { Dish, MealData } from "@/types/recipe1day-types"
-import { ChefHat, Clock, Utensils } from 'lucide-react'
+import axios from "axios"
+import { ChefHat, Clock, Trash2, Utensils } from 'lucide-react'
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 interface MealSuggestionProps {
   mealData: MealData;
@@ -13,6 +17,55 @@ interface MealSuggestionProps {
 }
 
 export default function MealSuggestion({ mealData, onViewDish }: MealSuggestionProps) {
+  const [isDeleting, setIsDeleting] = useState(false)
+  const navigate = useNavigate()
+
+  // すべての料理の材料を集める関数
+  const getAllIngredients = (): string[] => {
+    const allIngredients = new Set<string>()
+    Object.values(mealData).forEach((meals: Dish[]) => {
+      meals.forEach((dish: Dish) => {
+        dish.ingredients.forEach((ingredient: string) => {
+          allIngredients.add(ingredient)
+        })
+      })
+    })
+    return Array.from(allIngredients)
+  }
+
+  const handleDeleteAllIngredients = async () => {
+    try {
+      setIsDeleting(true)
+      const token = localStorage.getItem('token')
+      const allIngredients = getAllIngredients()
+      
+      // 食材の削除リクエスト
+      await axios.delete("http://localhost:80/service/cook/", {
+        data: { names: allIngredients },
+        headers: {
+          'Authorization': token ? `Token ${token}` : '',
+        }
+      })
+
+      // ローカルストレージの食材データを更新
+      const localIngredients = localStorage.getItem('ingredients')
+      const ingredients: { name: string }[] = localIngredients ? JSON.parse(localIngredients) : []
+      const updatedIngredients = ingredients.filter(
+        (ingredient: { name: string }) => !allIngredients.includes(ingredient.name)
+      )
+      localStorage.setItem('ingredients', JSON.stringify(updatedIngredients))
+
+      localStorage.removeItem('meal1day')
+
+      navigate('/')      
+
+    } catch (error) {
+      console.error('食材の削除に失敗しました:', error)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <div className="container mx-auto p-4">
       <div className="text-center mb-8">
@@ -22,8 +75,39 @@ export default function MealSuggestion({ mealData, onViewDish }: MealSuggestionP
         </div>
         <p className="text-orange-600">1日分のおすすめ料理をご提案します</p>
       </div>
+
+      <div className="mb-8 flex justify-center">
+        <PopupDialog
+          trigger={
+            <Button 
+              variant="outline"
+              size="lg"
+              className="border-orange-200 hover:bg-orange-100 text-orange-700 hover:text-orange-800"
+              disabled={isDeleting}
+            >
+              <Trash2 className="h-5 w-5 mr-2" />
+              全ての必要食材を削除
+            </Button>
+          }
+          title="全ての必要食材を削除しますか？"
+          description="この1日分の献立に必要な全ての食材を在庫から削除します"
+          onConfirm={handleDeleteAllIngredients}
+          confirmText="削除する"
+        >
+          <div className="space-y-4 text-orange-800">
+            <p>以下の食材が在庫から削除されます：</p>
+            <div className="max-h-[200px] overflow-y-auto pr-2">
+              <ul className="list-disc list-inside space-y-1 text-orange-600">
+                {getAllIngredients().map((ingredient, index) => (
+                  <li key={index}>{ingredient}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </PopupDialog>
+      </div>
       
-      {["breakfast", "lunch", "dinner"].map((mealType) => (
+      {(Object.keys(mealData) as Array<keyof MealData>).map((mealType) => (
         <div key={mealType} className="mb-12">
           <h2 className="text-2xl font-bold text-orange-800 mb-6">
             {mealType === "breakfast" && "朝食"}
@@ -31,7 +115,7 @@ export default function MealSuggestion({ mealData, onViewDish }: MealSuggestionP
             {mealType === "dinner" && "夕食"}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mealData[mealType as keyof MealData].map((dish) => (
+            {mealData[mealType].map((dish: Dish) => (
               <Card 
                 key={dish.id} 
                 className="w-full h-[400px] flex flex-col bg-orange-50/50 border-orange-100 hover:shadow-lg transition-shadow duration-200"
@@ -81,3 +165,4 @@ export default function MealSuggestion({ mealData, onViewDish }: MealSuggestionP
     </div>
   )
 }
+

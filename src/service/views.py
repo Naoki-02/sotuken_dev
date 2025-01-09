@@ -348,7 +348,7 @@ class RecipeSuggestionView(APIView):
                     {"role": "system", "content": ststem_prompt},
                     {"role": "user", "content": prompt},
                 ],
-                max_tokens=2000,
+                max_tokens=4000,
                 temperature=0.8,
             )
 
@@ -464,15 +464,16 @@ class DeleteUseIngredients(APIView):
             names = request.data.get("names", [])  # 複数の食材名をリストとして取得
             not_found_items = []
 
-            try:
-                recipe = Recipe.objects.get(id=recipe_id)
-            except Recipe.DoesNotExist:
-                return JsonResponse({'error': 'レシピが見つかりません'}, status=404)
+            if (recipe_id):
+                try:
+                    recipe = Recipe.objects.get(id=recipe_id)
+                except Recipe.DoesNotExist:
+                    return JsonResponse({'error': 'レシピが見つかりません'}, status=404)
 
-            CookHistory.objects.create(
-                user=request.user,
-                recipe=recipe,
-            )
+                CookHistory.objects.create(
+                    user=request.user,
+                    recipe=recipe,
+                )
 
             for name in names:
                 ingredient = Ingredients.objects.filter(
@@ -520,6 +521,86 @@ class UpdateIngredients(APIView):
 class OCRView(APIView):
     permission_classes = [IsAuthenticated]  # ユーザ認証が必要
 
+    def categorize_item(self,item_name):
+        # カテゴリキーワードを定義
+        categories = {
+            "肉": ["豚", "鶏", "牛", "肉", "しゃぶしゃぶ","ベーコン", "ハム", "ソーセージ", "ミンチ", "ハンバーグ", "ステーキ", "チキン", "ハンバーグ","とり","唐揚","つくね"],
+            "魚": ["魚", "鮭", "鯖", "帆立", "貝","刺身","海老","太子"],
+            "野菜": ["キャベツ", "玉ねぎ", "トマト", "レタス", "生姜", "きゅうり","大根", "人参", "茄子", "ぶなしめじ", "トマト", "じゃが芋", "ほうれん草", "かぼちゃ","ブロッコリー"],
+            "乳製品": ["牛乳", "ヨーグルト", "チーズ", "バター", "生クリーム", "アイスクリーム","バニラ"],
+            "果物": ["リンゴ", "バナナ", "オレンジ", "イチゴ", "ブドウ", "メロン", "スイカ", "パイナップル", "キウイ", "柿", "梨", "桃", "さくらんぼ", "いちじく", "マンゴー"],
+        }
+
+        # 商品名に含まれるキーワードをもとにカテゴリを割り当て
+        for category, keywords in categories.items():
+            for keyword in keywords:
+                if keyword in item_name:
+                    return category
+
+        # 該当するカテゴリがなければ「その他」
+        return "その他"
+    
+    # 商品名を抽出する関数
+    def extract_items(self,receipt_data):
+        items = []
+        # ドンキ、ヤオコー、ヨークベニマル、ほげ、よしやなどのレシートの商品名を抽出
+        
+        for entry in receipt_data:
+            # パターン1: "*"で始まる商品の抽出
+            match_star = re.match(r"^\* \s*(.+)", entry)
+            if match_star:
+                # 商品名が数字だけの場合を除外
+                item = match_star.group(1).strip()
+                if not item.isdigit():  # 数字だけの文字列は除外
+                    items.append(item)
+                continue
+            
+            # パターン2: 数字3桁の後に続く商品の抽出
+            match_number = re.match(r"^\d{3}\s+(.+)", entry)
+            if match_number:
+                item = match_number.group(1).strip()
+                # 数字だけの文字列は除外
+                if not item.isdigit():
+                    items.append(item)
+            
+            # パターン3: 03*, 13*, 01* で始まる商品の抽出
+            match_custom = re.match(r"^(03|13|01)\*?\s*(.+)", entry)
+            if match_custom:
+                item = match_custom.group(2).strip()
+                if item and not item.isdigit():  # 数字だけの文字列は除外
+                    items.append(item)
+                    
+            # パターン4: 数字4桁の後に続く商品の抽出
+            match_four_digit = re.match(r"^\d{4}\s+(.+)", entry)
+            if match_four_digit:
+                item = match_four_digit.group(1).strip()
+                if not item.isdigit():
+                    items.append(item)
+                    
+            # パターン5: "外"で始まり数字何桁かの後に続く文字列の抽出
+            match_out_number = re.match(r"^外\d+\s*(.+)", entry)
+            if match_out_number:
+                item = match_out_number.group(1).strip()
+                # 数字部分を取り除く（先頭の数字を取り除く）
+                item = re.sub(r'^\d+', '', item).strip()
+                if item and not item.isdigit():
+                    items.append(item)
+                    
+            # パターン6: 数字+ '*' の後に続く文字列の抽出
+            match_digit_star = re.match(r"^\d+\* \s*(.*?)(?:\s*¥|\s*$)", entry)
+            if match_digit_star:
+                item = match_digit_star.group(1).strip()
+                
+                # 数字と記号（または数字＋ハイフン＋数字）の部分を除外
+                if re.match(r"^\d+[-\d\s]+$", item):  # 数字とハイフン、スペースだけの部分を除外
+                    continue
+
+                # ひらがな、カタカナ、漢字、英語を含む商品名のみを抽出
+                if item and not item.isdigit() and re.search(r'[A-Za-zぁ-んァ-ン一-龯]', item):
+                    items.append(item)
+
+        return items
+    
     def post(self, request, *args, **kwargs):
         # ファイルを取得
         uploaded_file: InMemoryUploadedFile = request.FILES.get('image', None)
@@ -571,48 +652,38 @@ class OCRView(APIView):
             except (KeyError, IndexError):
                 text = "No text detected."
 
-            # 食材らしい項目を抽出するための正規表現
-            pattern = r"^(03|13|01)\*?([^¥]*)"  # 03*, 13*, 01* で始まる商品名を抽出
-
-            # 結果を格納するリスト
-            ingredients_list = []
-
             # テキストを行ごとに分割
             lines = text.split("\n")
-            for line in lines:
-                match = re.match(pattern, line)
-                if match:
-                    category = match.group(1)  # 03, 13, 01
-                    rest = match.group(2).strip()  # 商品名と数量
-                    if " " in rest:  # スペースで分割して数量を抽出
-                        name, quantity = rest.rsplit(" ", 1)
-                    else:
-                        name, quantity = rest, "1個"  # 数量がない場合はデフォルトで1個
-
-                    # type を追加
-                    if category == "03":
-                        item_type = "vegetable"
-                    elif category == "13":
-                        item_type = "other"
-                    elif category == "01":
-                        item_type = "meat"
-                    else:
-                        item_type = "other"
-                    ingredients_list.append(
-                        {"category": item_type, "name": name, "quantity": quantity})
-
-            for ingredient_data in ingredients_list:
-                if not ingredient_data:
+            file_path = os.path.join(settings.BASE_DIR, "debug_response.txt")
+            with open(file_path, "w", encoding="utf-8") as file:
+                file.write(str(lines))
+            
+            result=self.extract_items(lines)
+            categorize_item={item:self.categorize_item(item) for item in result}
+            ingredients_list=[]
+            
+            for item,category in categorize_item.items():
+                ingredient_data={
+                    'name':item,
+                    'category':category
+                }
+                
+                if not ingredient_data['name']:
                     logger.warning('Name not provided for an ingredient')
                     return JsonResponse({'message': 'Name is required for each ingredient'}, status=400)
-
+                
+                ingredients_list.append(ingredient_data)
+            
+            for ingredient in ingredients_list:
                 ingredients = Ingredients(
                     user_id=request.user.id,
-                    name=ingredient_data.get('name'),
-                    quantity=ingredient_data.get('quantity'),
-                    category=ingredient_data.get('category')
+                    name=ingredient.get('name'),
+                    category=ingredient.get('category')
                 )
                 ingredients.save()
+            
+                
+                
 
             return Response({"message": "保存完了しました。"}, status=status.HTTP_200_OK)
 

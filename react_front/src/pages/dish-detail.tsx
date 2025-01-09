@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { PopupDialog } from "@/services/PopupDialog"
 import { Dish } from "@/types/recipe1day-types"
 import axios from 'axios'
 import { ArrowLeft, CheckCircle, ChefHat, Clock, ListOrdered, Utensils } from 'lucide-react'
@@ -34,7 +33,7 @@ export default function DishDetail({ dish, onBack }: DishDetailProps) {
 
       localStorage.setItem('dishes', JSON.stringify(updatedDishes))
 
-      await axios.delete("http://localhost:80/service/cook/", {
+      await axios.delete("http://localhost:80/service/", {
         data: { dish_id: dish.id, names: names },
         headers: {
           'Authorization': token ? `Token ${token}` : '',
@@ -161,39 +160,6 @@ export default function DishDetail({ dish, onBack }: DishDetailProps) {
             </ol>
           </div>
         </CardContent>
-
-        <CardFooter className="flex justify-center p-6 pt-0">
-          {isCooking ? (
-            <div className="flex items-center bg-green-100 text-green-700 px-6 py-3 rounded-lg">
-              <CheckCircle className="mr-2 h-5 w-5" />
-              <span className="text-lg font-semibold">調理開始済み</span>
-            </div>
-          ) : (
-            <PopupDialog
-              trigger={
-                <Button
-                  size="lg"
-                  className="bg-orange-600 hover:bg-orange-700"
-                >
-                  <Utensils className="mr-2 h-5 w-5" />
-                  この料理をつくる
-                </Button>
-              }
-              title="料理を始めますか？"
-              description="必要な材料と手順を確認しましたか？"
-              onConfirm={handleCook}
-              confirmText="料理を始める"
-            >
-              <div className="space-y-4 text-orange-800">
-                <p>この料理を始めると、以下の操作が行われます：</p>
-                <ul className="list-disc list-inside space-y-2 text-orange-600">
-                  <li>使用する材料が在庫から差し引かれます</li>
-                  <li>調理履歴に記録されます</li>
-                </ul>
-              </div>
-            </PopupDialog>
-          )}
-        </CardFooter>
       </Card>
     </div>
   )

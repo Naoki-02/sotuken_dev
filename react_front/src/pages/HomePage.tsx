@@ -3,7 +3,7 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Camera, ChefHat, HelpCircle, List, MessageCircle, Receipt, ScrollText, ShoppingCart } from 'lucide-react'
+import { Calendar, Camera, ChefHat, HelpCircle, List, MessageCircle, Receipt, Recycle, ScrollText, ShoppingCart, Soup } from 'lucide-react'
 
 const features = [
   {
@@ -29,11 +29,23 @@ const features = [
   {
     icon: <ChefHat className="w-10 h-10 text-orange-600" />,
     title: "料理の提案",
-    description: "登録された食材から作れる料理を自動で提案します。新しいレシピとの出会いも楽しめます。",
-    steps: [
-      "「料理提案」ボタンをタップ",
-      "おすすめのレシピが表示されます",
-      "気になるレシピを選んで調理開始"
+    description: "登録された食材から作れる料理を自動で提案します。4つの提案方法から選べます。",
+    subFeatures: [
+      {
+        icon: <Calendar className="w-6 h-6 text-orange-600" />,
+        title: "一日献立提案",
+        description: "朝食・昼食・夕食の一日分の献立を提案します。栄養バランスを考慮した組み合わせをご紹介します。"
+      },
+      {
+        icon: <Recycle className="w-6 h-6 text-orange-600" />,
+        title: "リメイク料理提案",
+        description: "残った料理や食材をアレンジした新しいレシピを提案します。食材を無駄なく使い切れます。"
+      },
+      {
+        icon: <Soup className="w-6 h-6 text-orange-600" />,
+        title: "今ある食材から提案",
+        description: "現在の食材から作れる料理を提案します。足りない食材があれば代替案も提示します。"
+      }
     ]
   }
 ]
@@ -45,15 +57,11 @@ const faqs = [
   },
   {
     question: "料理の提案はどのような基準で行われますか？",
-    answer: "登録されている食材の種類や量、消費期限などを考慮して、最適なレシピを提案します。また、ユーザーの好みや調理履歴も参考にしています。"
-  },
-  {
-    question: "消費期限が近い食材の通知は設定できますか？",
-    answer: "はい、設定画面から通知のタイミングをカスタマイズできます。デフォルトでは消費期限の3日前にお知らせします。"
+    answer: "登録されている食材の種類や量、消費期限などを考慮して、最適なレシピを提案します。"
   },
   {
     question: "レシピの保存は可能ですか？",
-    answer: "はい、気に入ったレシピは「お気に入り」として保存できます。保存したレシピは後からマイページで確認できます。"
+    answer: "調理済みの料理は履歴として保存されます"
   }
 ]
 
@@ -95,16 +103,32 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <div className="pl-[72px]">
-                  <div className="space-y-4">
-                    {feature.steps.map((step, stepIndex) => (
-                      <div key={stepIndex} className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-sm font-medium text-orange-600">
-                          {stepIndex + 1}
+                  {feature.steps ? (
+                    <div className="space-y-4">
+                      {feature.steps.map((step, stepIndex) => (
+                        <div key={stepIndex} className="flex items-center gap-3">
+                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-sm font-medium text-orange-600">
+                            {stepIndex + 1}
+                          </div>
+                          <p className="text-orange-700">{step}</p>
                         </div>
-                        <p className="text-orange-700">{step}</p>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : feature.subFeatures ? (
+                    <div className="grid gap-4">
+                      {feature.subFeatures.map((subFeature, subIndex) => (
+                        <div key={subIndex} className="flex items-start gap-3 p-4 bg-white rounded-lg border border-orange-100">
+                          <div className="mt-1">
+                            {subFeature.icon}
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-orange-800 mb-1">{subFeature.title}</h3>
+                            <p className="text-sm text-orange-600">{subFeature.description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               </CardContent>
             </Card>
@@ -135,20 +159,6 @@ export default function HomePage() {
                   <p className="text-sm text-orange-600">明るい場所で、レシート全体が写るように撮影してください</p>
                 </div>
               </div>
-              {/* <div className="flex gap-3 p-4 bg-white/80 rounded-lg border border-orange-100">
-                <Utensils className="w-5 h-5 text-orange-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="font-medium text-orange-800 mb-1">レシピのカスタマイズ</h3>
-                  <p className="text-sm text-orange-600">提案されたレシピは、材料や手順を自由にアレンジできます</p>
-                </div>
-              </div> */}
-              {/* <div className="flex gap-3 p-4 bg-white/80 rounded-lg border border-orange-100">
-                <MessageCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="font-medium text-orange-800 mb-1">コミュニティの活用</h3>
-                  <p className="text-sm text-orange-600">他のユーザーのレシピやアレンジも参考にできます</p>
-                </div>
-              </div> */}
             </div>
           </CardContent>
         </Card>
@@ -157,7 +167,7 @@ export default function HomePage() {
         <div className="space-y-6">
           <div className="flex items-center gap-2">
             <MessageCircle className="w-6 h-6 text-orange-600" />
-            <h2 className="text-xl font-semibold text-orange-800">よくある質問</h2>
+            <h2 className="text-xl font-semibold text-orange-800">Q&A</h2>
           </div>
           <Separator className="bg-orange-100" />
           <Accordion type="single" collapsible className="w-full">
