@@ -148,7 +148,7 @@ STATIC_ROOT = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-OEPNAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 VISION_API_KEY = os.environ.get('VISION_API_KEY')
 
 CORS_ALLOWED_ORIGINS = [
@@ -193,7 +193,7 @@ LOGGING = {
     },
     'handlers': {
         'file': {
-            'level': 'DEBUG',  # DEBUGレベルからのメッセージをログに出力
+            'level': 'INFO',  # DEBUGレベルからのメッセージをログに出力
             'class': 'logging.FileHandler',
             'filename': os.path.join(BASE_DIR, 'warnings.log'),
             'formatter': 'detailed',

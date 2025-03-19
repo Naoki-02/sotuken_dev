@@ -24,6 +24,8 @@ const Logout: React.FC = () => {
                     });
                     // 認証情報をクリア
                     logout();
+                    // ローカルストレージを削除
+                    localStorage.clear();
                     // ログアウト後にリダイレクト
                     navigate('/auth');
                 } catch (error) {

@@ -12,21 +12,21 @@ interface RecipeSuggestionProps {
   onViewRecipe: (recipe: Recipe) => void;
 }
 
-export default function RecipeSuggestion({ recipes, onViewRecipe }: RecipeSuggestionProps) {
+export default function Recipe_RemakeSuggestion({ recipes, onViewRecipe }: RecipeSuggestionProps) {
   const navigate = useNavigate()
   return (
     <div className="container mx-auto p-4">
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-2 mb-2">
           <ChefHat className="h-8 w-8 text-orange-600" />
-          <h1 className="text-3xl font-bold text-orange-800">おすすめのレシピ</h1>
+          <h1 className="text-3xl font-bold text-orange-800">リメイク料理レシピ</h1>
         </div>
-        <p className="text-orange-600">今日の食材でつくれるレシピをご提案します</p>
+        <p className="text-orange-600">前回調理した料理からリメイクしたレシピをご提案します</p>
         <div className="mt-4">
             <Button
               variant="outline"
               onClick={() => {
-                localStorage.removeItem('recipes');
+                localStorage.removeItem('recipes-remake');
                 navigate('/')
               }}
               className="border-orange-200 hover:bg-orange-100 text-orange-700 hover:text-orange-800"

@@ -24,13 +24,13 @@ export function MobileNav() {
           <PlusCircle className="h-6 w-6" />
           <span className="text-xs">追加</span>
         </Link>
-        <Link to="/Survey" className="flex flex-col items-center justify-center text-gray-600 hover:text-gray-900">
-          <ClipboardList className="h-6 w-6" />
-          <span className="text-xs">アンケート</span>
-        </Link>
         <Link to="/history" className="flex flex-col items-center justify-center text-gray-600 hover:text-gray-900">
           <History className="h-6 w-6" />
           <span className="text-xs">履歴</span>
+        </Link>
+        <Link to="/Survey" className="flex flex-col items-center justify-center text-gray-600 hover:text-gray-900">
+          <ClipboardList className="h-6 w-6" />
+          <span className="text-xs">アンケート</span>
         </Link>
         <Link to={isAuthenticated ? "/logout" : "/auth"} className="flex flex-col items-center justify-center text-gray-600 hover:text-gray-900">
           <User className="h-6 w-6" />
