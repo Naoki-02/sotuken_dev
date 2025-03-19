@@ -35,14 +35,34 @@ export function SuggestionSpan() {
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel className="rounded-md border-orange-200 text-orange-700 hover:bg-orange-100">キャンセル</AlertDialogCancel>
+                    <AlertDialogCancel className="rounded-md border-orange-200 text-orange-700 hover:bg-orange-100">
+                        キャンセル
+                    </AlertDialogCancel>
+                    <AlertDialogAction asChild>
+                        <Link
+                            to="/daily-menu"
+                            onClick={() => setIsOpen(false)}
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-orange-500 text-white hover:bg-orange-600 h-10 px-4 py-2"
+                        >
+                            一日の献立
+                        </Link>
+                    </AlertDialogAction>
+                    <AlertDialogAction asChild>
+                        <Link
+                            to="/recipe-remake"
+                            onClick={() => setIsOpen(false)}
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-orange-500 text-white hover:bg-orange-600 h-10 px-4 py-2"
+                        >
+                            リメイク料理
+                        </Link>
+                    </AlertDialogAction>
                     <AlertDialogAction asChild>
                         <Link
                             to="/recipe"
                             onClick={() => setIsOpen(false)}
-                            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-orange-600 text-white hover:bg-orange-700 h-10 px-4 py-2"
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-orange-500 text-white hover:bg-orange-600 h-10 px-4 py-2"
                         >
-                            表示する
+                            食材から料理
                         </Link>
                     </AlertDialogAction>
                 </AlertDialogFooter>
@@ -50,4 +70,3 @@ export function SuggestionSpan() {
         </AlertDialog>
     )
 }
-

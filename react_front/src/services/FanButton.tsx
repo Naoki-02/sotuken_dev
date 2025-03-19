@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom'
 
 const menuItems = [
     { icon: Calendar, label: '一日献立提案', path: '/daily-menu'},
-    { icon: Recycle, label: 'リメイク料理提案', path: '/'},
+    { icon: Recycle, label: 'リメイク料理提案', path: '/recipe-remake'},
     { icon: CookingPot, label: '今ある食材から提案', path: '/recipe'},
 ]
 

@@ -3,7 +3,6 @@ from django.urls import include, path
 from . import views
 
 urlpatterns = [
-    path('chat/', views.ChatGPTView.as_view(), name='chat'),
     path('post_ingredients/', views.PostIngredientsView.as_view(), name='ingredients'),
     path('get_ingredients/',views.GetIngredientsListView.as_view(), name='get_ingredients'),
     path('delete_ingredients/<int:pk>/',views.DeleteIngredients.as_view(), name='delete_ingredients'),
@@ -13,4 +12,5 @@ urlpatterns = [
     path('cook/',views.DeleteUseIngredients.as_view(), name='cook'),
     path('get_cook_history/',views.CookHistoryView.as_view(), name='get_cook_history'),
     path('get_meal1day/',views.Recipe_1DaySuggestionView.as_view(), name='get_meal1day'),
+    path('remake_recipe/',views.RemakeRecipeView.as_view(), name='remake_recipe'),
 ]

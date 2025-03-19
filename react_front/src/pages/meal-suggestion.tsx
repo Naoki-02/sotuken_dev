@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { PopupDialog } from "@/services/PopupDialog"
 import { Dish, MealData } from "@/types/recipe1day-types"
 import axios from "axios"
-import { ChefHat, Clock, Trash2, Utensils } from 'lucide-react'
+import { ChefHat, Clock, RefreshCcw, Trash2, Utensils } from 'lucide-react'
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -75,7 +75,19 @@ export default function MealSuggestion({ mealData, onViewDish }: MealSuggestionP
         </div>
         <p className="text-orange-600">1日分のおすすめ料理をご提案します</p>
       </div>
-
+      <div className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                localStorage.removeItem('meal1day')
+                navigate('/')
+              }}
+              className="border-orange-200 hover:bg-orange-100 text-orange-700 hover:text-orange-800"
+            >
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              レシピを再提案
+            </Button>
+          </div>
       <div className="mb-8 flex justify-center">
         <PopupDialog
           trigger={

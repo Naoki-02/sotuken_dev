@@ -10,11 +10,12 @@ import HomePage from './pages/HomePage';
 import Layout from './pages/Layout';
 import Logout from './pages/LogoutPage';
 import MultiIngredientForm from './pages/multi-ingredient-form';
-import Recipe1day from './pages/recipe-1daysuggestion';
 import SurveyPage from './pages/SurveyPage';
 import { AuthProvider } from './services/AuthContext';
+import Recipe1day from './services/meal-1day-get';
 import ProtectedRoute from './services/protectedRoute';
 import RecipePage from './services/recipe-get';
+import RecipeRemakePage from './services/recipe-remake-get';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
             <Route path='recipe' element={<RecipePage />} />
             <Route path="history" element={<CookingHistoryPage />} />
             <Route path="daily-menu" element={<Recipe1day />} />
+            <Route path="recipe-remake" element={<RecipeRemakePage />} />
           </Route>
         </Route>
       </Routes>
